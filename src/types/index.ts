@@ -1,6 +1,6 @@
-export * from './product';
+// export * from './api';
 export * from './cart';
-export * from './order';
 export * from './events';
-export * from './api';
+export * from './order';
+export * from './product';
 export * from './view';
