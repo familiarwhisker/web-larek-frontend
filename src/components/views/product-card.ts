@@ -1,22 +1,54 @@
-import { IProduct, IView } from '../../types';
+import { IProduct } from '../../types';
 import { EventEmitter } from '../base/event_emitter';
 
-export class ProductCardView implements IView<IProduct[]> {
-  constructor(private container: HTMLElement, private emitter: EventEmitter) {}
+export class ProductCardView {
+  private element: HTMLElement;
 
-  render(data: IProduct[]): void {
-    console.log('Render all products:', data);
+  constructor(
+    private product: IProduct,
+    private template: HTMLTemplateElement,
+    private emitter: EventEmitter
+  ) {
+    this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
 
-    this.container.innerHTML = '';
+    // Заполнение базовых полей
+    const title = this.element.querySelector('.card__title');
+    if (title) title.textContent = product.title;
 
-    data.forEach((product) => {
-      const item = document.createElement('div');
-      item.classList.add('product-card');
-      item.textContent = product.title;
-      item.addEventListener('click', () => {
-        this.emitter.emit('product:select', product);
-      });
-      this.container.append(item);
+    const price = this.element.querySelector('.card__price');
+    if (price) price.textContent = `${product.price} синапсов`;
+
+    const category = this.element.querySelector('.card__category');
+    if (category) category.textContent = product.category;
+
+    const img = this.element.querySelector('.card__image') as HTMLImageElement;
+    if (img) img.src = product.image;
+
+    // Общий клик по карточке (открытие модалки)
+    this.element.addEventListener('click', () => {
+      this.emitter.emit('product:select', product);
     });
+
+    // Добавить в корзину (только для preview-карточки)
+    const addButton = this.element.querySelector('.card__button');
+    if (addButton) {
+      addButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // не открывать модалку повторно
+        this.emitter.emit('cart:add', product);
+      });
+    }
+
+    // Удалить из корзины (только для basket-карточки)
+    const deleteButton = this.element.querySelector('.basket__item-delete');
+    if (deleteButton) {
+      deleteButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.emitter.emit('cart:remove', product);
+      });
+    }
+  }
+
+  render(): HTMLElement {
+    return this.element;
   }
 }

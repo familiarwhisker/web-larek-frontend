@@ -6,7 +6,10 @@ import { EventEmitter } from './components/base/event_emitter';
 import { ProductCardView } from './components/views/product-card';
 import { ModalView } from './components/views/modal';
 import { CartView } from './components/views/cart';
-import { OrderFormView } from './components/views/order-form';
+import { MainView } from './components/views/main';
+import { OrderPaymentView } from './components/views/forms/order-payment';
+import { OrderContactsView } from './components/views/forms/order-contacts';
+import { SuccessView } from './components/views/success';
 
 import { IProduct } from './types';
 
@@ -14,20 +17,93 @@ import { ProductModel } from './components/models/product-model';
 import { CartModel } from './components/models/cart-model';
 import { OrderModel } from './components/models/order-model';
 
-// 1. Initialize core services
 const emitter = new EventEmitter();
 const apiClient = new Api(process.env.API_ORIGIN || '');
 
-// 2. Initialize models
+// Подписки на события
+emitter.on('product:select', (product) => {
+  productModel.selectProduct(product.id);
+});
+
+emitter.on('preview:change', (product) => {
+  const previewTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
+  const modalCard = new ProductCardView(product, previewTemplate, emitter).render();
+
+  modalView.render(modalCard);
+  modalView.open();
+});
+
+emitter.on('modal:close', () => {
+  modalView.close();
+});
+
+emitter.on('cart:render', () => {
+  const items = cartModel.getItems();
+  cartView.render(items);
+  mainView.updateCounter(items.length);
+});
+
+emitter.on('cart:add', (product) => {
+  cartModel.addProduct(product);
+  emitter.emit('cart:render');
+});
+
+emitter.on('cart:remove', (product) => {
+  cartModel.removeProduct(product);
+  emitter.emit('cart:render');
+});
+
+emitter.on('order:submit', (order) => {
+  apiClient.post('/order', order).then(() => {
+    cartModel.clear();
+    orderModel.clear();
+    emitter.emit('cart:render');
+
+    const successView = new SuccessView();
+    const successMessage = successView.render();
+    modalView.render(successMessage);
+    modalView.open();
+  });
+});
+
+emitter.on('order:open', () => {
+  const paymentForm = orderPaymentView.render(orderModel);
+  modalView.render(paymentForm);
+  modalView.open();
+});
+
+emitter.on('order:ready', () => {
+  const contactForm = orderContactsView.render(orderModel);
+  modalView.render(contactForm);
+  modalView.open();
+});
+
+emitter.on('cart:open', () => {
+  const items = cartModel.getItems();
+  const cartElement = cartView.render(items);
+  modalView.render(cartElement);
+  modalView.open();
+});
+
+// Объявление моделей
 const productModel = new ProductModel(emitter);
 const cartModel = new CartModel(emitter);
 const orderModel = new OrderModel(emitter);
 
-// 3. Initialize views
-const productCardView = new ProductCardView(
-  document.querySelector('.card-list')!,
-  emitter
-);
+// Инициализация Views
+const mainView = new MainView(emitter);
+
+apiClient.get<IProduct[]>('/products').then((products) => {
+  productModel.setProducts(products);
+
+  const catalogTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
+  const cards = products.map(p =>
+    new ProductCardView(p, catalogTemplate, emitter).render()
+  );
+
+  mainView.render(cards);
+});
+
 const modalView = new ModalView(
   document.querySelector('#modal-container')!,
   emitter
@@ -37,48 +113,29 @@ const cartView = new CartView(
   emitter
 );
 
-const orderFormView = new OrderFormView(
-  document.querySelector('#order-form')!,
+const orderPaymentView = new OrderPaymentView(
+  document.querySelector('#order') as HTMLTemplateElement,
   emitter
 );
 
-// 4. Fetch product data and render
-apiClient.get<IProduct[]>('/products').then((products: IProduct[]) => {
-  productModel.setProducts(products);
-  productCardView.render(products);
-});
+const orderContactsView = new OrderContactsView(
+  document.querySelector('#contacts') as HTMLTemplateElement,
+  emitter
+);
 
-// 5. Event listeners (Presenter logic)
 
-// Open modal with selected product
-emitter.on<'product:select'>('product:select', (product: IProduct) => {
-  modalView.render(product);
-  modalView.open();
-});
+// СТАРОЕ Удаление и добавление товаров в корзину
 
-// Add product to cart
-emitter.on<'cart:add'>('cart:add', (product: IProduct) => {
-  cartModel.addProduct(product);
-  cartView.render(cartModel.getItems());
-});
+// function updateCartUI() {
+//   const items = cartModel.getItems();
+//   mainView.updateCounter(items.length);
 
-// Remove product from cart
-emitter.on<'cart:remove'>('cart:remove', (product: IProduct) => {
-  cartModel.removeProduct(product);
-  cartView.render(cartModel.getItems());
-});
+//   const basketTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
+//   const cards = items.map(i => new ProductCardView(i.product, basketTemplate, emitter).render());
 
-// Close modal
-emitter.on<'modal:close'>('modal:close', () => {
-  modalView.close();
-});
+//   cartView.render(cards);
+// }
 
-// Submit order
-emitter.on<'order:submit'>('order:submit', (order) => {
-  apiClient.post('/order', order).then(() => {
-    cartModel.clear();
-    cartView.render([]);
-    orderFormView.clear?.();
-    alert('Order submitted successfully!');
-  });
-});
+// emitter.on<'cart:render'>('cart:render', () => {
+//   updateCartUI();
+// });

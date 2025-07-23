@@ -1,16 +1,35 @@
-import { IProduct } from '../../types';
 import { EventEmitter } from '../base/event_emitter';
 
 export class ModalView {
-  constructor(private container: HTMLElement, private emitter: EventEmitter) {}
+  private content: HTMLElement;
+  private closeButton: HTMLElement;
 
-  open() { /* ... */ }
-  close() { /* ... */ }
+  constructor(private container: HTMLElement, private emitter: EventEmitter) {
+    this.content = container.querySelector('.modal__content')!;
+    this.closeButton = container.querySelector('.modal__close')!;
 
-  render(product: IProduct): void {
-    console.log('Render modal with product', product);
-    this.container.addEventListener('click', () => {
-      this.emitter.emit('cart:add', product);
+    // Закрытие по кнопке
+    this.closeButton.addEventListener('click', () => {
+      this.emitter.emit('modal:close');
     });
+
+    // Закрытие по клику за пределами модалки
+    this.container.addEventListener('click', (e) => {
+      if (e.target === this.container) {
+        this.emitter.emit('modal:close');
+      }
+    });
+  }
+
+  open(): void {
+    this.container.classList.add('modal_active');
+  }
+
+  close(): void {
+    this.container.classList.remove('modal_active');
+  }
+
+  render(content: HTMLElement): void {
+    this.content.replaceChildren(content);
   }
 }

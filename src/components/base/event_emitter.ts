@@ -77,12 +77,12 @@ export class EventEmitter implements IEvents {
   /**
    * Сделать коллбек триггер, генерирующий событие при вызове
    */
-  trigger<K extends keyof AppEventMap>(eventName: K, context?: Partial<AppEventMap[K]>) {
-    return (event: object = {}) => {
-      this.emit(eventName, {
-        ...(event || {}),
-        ...(context || {})
-      } as AppEventMap[K]);
+  trigger<K extends keyof AppEventMap>(
+    eventName: K,
+    context?: Partial<AppEventMap[K]>
+  ): (data: AppEventMap[K]) => void {
+    return (data: AppEventMap[K]) => {
+      this.emit(eventName, data);
     };
   }
 }

@@ -20,7 +20,7 @@ export class ProductModel {
   selectProduct(id: string): void {
     const product = this.getProductById(id);
     if (product) {
-      this.emitter.emit('product:select', product);
+      this.emitter.emit('preview:change', product);
     }
   }
 }
