@@ -2,25 +2,36 @@
 
 Tech stack: HTML, SCSS, TS, Webpack
 
-## Project structure
+## Структура проекта
 
-- `src/` — source code
-- `src/components/` — UI components
-- `src/components/types/` — types for components and event emitter
-- `src/components/base/` — event emitter and API realisation
-- `src/components/models/` — models for classes and shared logic
-- `src/components/view/` — view files
+src/
+├── components/
+│   ├── base/                 — инфраструктурные классы (API, EventEmitter)
+│   ├── models/               — слой Модели (данные и логика)
+│   ├── views/                — слой Представления (отрисовка)
+│   │   ├── forms/            — формы оформления заказа
+│   └── ...                   — другие view-компоненты
+├── types/                    — типы и интерфейсы
+├── pages/index.html          — основной HTML-шаблон
+├── scss/                     — стили
+└── index.ts                  — точка входа, слой Презентера
 
-### Key files
+### Ключевые файлы
 
-- `src/pages/index.html` — main HTML page
-- `src/types/index.ts` — entry point for app-wide types
-- `src/index.ts` — application entry point
-- `src/scss/styles.scss` — root SCSS file
-- `src/utils/constants.ts` — constants
-- `src/utils/utils.ts` — utility functions
+- `src/pages/index.html` — HTML-шаблон страницы
+- `src/types/index.ts` — корневой файл типов
+- `src/index.ts` — точка входа, презентер
+- `src/scss/styles.scss` — корневой файл стилей
+- `src/components/base/api.ts` - API-клиент
+- `src/components/base/event_emitter.ts` - реализация паттерна «Наблюдатель»
+- `src/components/models/` - классы модели
+- `src/components/views/` - классы представлений
+- `src/utils/constants.ts` — константы
+- `src/utils/utils.ts` — вспомогательные функции
 
-## Installation and launch
+---
+
+## Установка и запуск
 
 To install and run the project, use:
 
@@ -48,225 +59,430 @@ or
 yarn build
 ```
 
-## Architecture
+## Архитектура
 
-The project follows the MVP (Model — View — Presenter) architectural pattern.
+Приложение построено по принципу MVP (Model — View — Presenter):
 
-Model — manages data and application state.
-View — handles UI rendering and user interaction.
-Presenter — connects models and views, and contains business logic. Presenter logic is located in `index.ts`.
+`Model` (Модель): управляет данными и бизнес-логикой
 
-All communication between components is implemented using `EventEmitter`, which is passed into each class via constructor.
-API calls are made only in `index.ts`, and their results are passed into models.
+`View` (Представление): отображает данные, реагирует на действия пользователя
+
+`Presenter`: связывает Model и View через события. Логика презентера реализована в `index.ts`
+
+Коммуникация между слоями осуществляется через собственный `EventEmitter`.
+Каждый класс получает экземпляр emitter через конструктор и использует события для взаимодействия с другими слоями.
 
 ---
 
-## Model layer
+## MVP-поток событий
+View → EventEmitter → Model → EventEmitter → View
 
-## Product model
-Stores and provides access to the list of products.
+Пример:
+Клик на карточку → product:select
+ProductModel вызывает preview:change
+ModalView открывает карточку
 
-**Constructor:**
+---
+
+## Общая концепция
+
+`EventEmitter` реализует шаблон наблюдатель (Observer):
+View и Model взаимодействуют через события, не зная о друг друге напрямую.
+Все View и Model получают `EventEmitter` через конструктор.
+
+---
+
+## Особенности
+- Событийная архитектура
+- Строгая типизация
+- Разделение ответственности
+- Легко масштабируется
+- Все данные и UI связаны только через `EventEmitter`
+
+---
+
+## Точка входа, реализация презентера (src/index.ts)
+Этот файл отвечает за инициализацию приложения и реализацию слоя Presenter в архитектуре MVP.
+
+**Основные задачи:**
+- Создаёт экземпляры всех моделей и представлений
+- Связывает их через `EventEmitter`
+- Подписывается на события и управляет взаимодействием между слоями
+
+---
+
+## Описание файла событий (types/index.ts)
+Этот файл содержит описания событий, которые используются в приложении для обмена данными между слоями Model, View и Presenter через `EventEmitter`. Он реализует строго типизированную событийную шину, где каждое событие связано с конкретным типом payload.
+
+**Файл включает:**
+- Карту всех событий приложения и соответствующих им типов данных (`AppEventMap`)
+- Тип-объединение всех доступных событий (`AppEvents`)
+- Обобщённый интерфейс события (`IEvent<T>`)
+
+---
+
+## Наблюдатель / Observer (src/components/base/event_emitter.ts)
+Файл реализует собственный, облегчённый вариант паттерна Observer (Наблюдатель), который позволяет компонентам подписываться на события и реагировать на них.
+Это фундаментальный механизм связи между всеми частями приложения. Благодаря `EventEmitter`, View не знает, что существует Model, и наоборот — они просто обмениваются событиями.
+
+**Основная роль:**
+- Хранит подписки на события
+- Позволяет подписываться через `.on(...)`
+- Позволяет "триггерить" события через `.emit(...)`
+- Обеспечивает слабую связанность между компонентами
+
+**Пример использования:**
 ```ts
-constructor(emitter: EventEmitter)
+emitter.on('cart:add', (product) => cartModel.addProduct(product));
+emitter.emit('cart:render', cartModel.getItems());
 ```
 
-**Fields:**
-- `private products: IProduct[]` — array of products
-- `private emitter: EventEmitter` — broker for emitting events
+**Структура:**
+```ts
+interface IEvents {
+  on<K extends keyof AppEventMap>(
+    event: K,
+    callback: (payload: AppEventMap[K]) => void
+  ): void;
 
-**Methods:**
-- `setProducts(products: IProduct[]): void` — saves the product list
-- `getProductById(id: string): IProduct | undefined` — finds product by ID
-- `selectProduct(id: string): void` — emits `product:select` event
+  emit<K extends keyof AppEventMap>(
+    event: K,
+    payload?: AppEventMap[K]
+  ): void;
+}
+```
+
+---
+
+## Слой моделей
+
+## Типы данных (src/types)
+
+### `ProductModel`
+Управляет данными о товарах. Служит хранилищем товаров, полученных с сервера, и предоставляет методы получения и выбора товара.
+Расположение: src/components/models/product-model.ts
+
+**Конструктор:**
+```ts
+constructor(private emitter: EventEmitter)
+```
+
+**Поля:**
+- `private products: IProduct[]` — список всех товаров
+- `private emitter: EventEmitter` — экземпляр брокера событий
+
+**Методы:**
+- `setProducts(products: IProduct[])` — выводит список товаров
+- `getProductById(id: string): IProduct | undefined` — ищет товар по id
+- `selectProduct(id: string): void` — эмитирует событие `product:select` с выбранным товаром
 
 ---
 
 ### `CartModel`
-Manages the cart state.
+Хранит список товаров в корзине и управляет логикой их добавления и удаления.
+Расположение: src/components/models/cart-model.ts
 
-**Constructor:**
+**Конструктор:**
 ```ts
 constructor(emitter: EventEmitter)
 ```
 
-**Fields:**
-- `private items: ICartItem[]` — list of cart items
-- `private emitter: EventEmitter` - event bus
+**Поля:**
+- `private items: ICartItem[]` — список товаров в корзине
+- `private emitter: EventEmitter` - брокер событий
 
-**Methods:**
-- `addProduct(product: IProduct): void` — adds a product or increases quantity
-- `removeProduct(product: IProduct): void` — decreases quantity or removes item
-- `getItems(): ICartItem[]` — returns current cart contents
-- `clear(): void` — empties the cart
+**Методы:**
+- `addProduct(product: IProduct): void` — добавляет товар или увеличивает количество
+- `removeProduct(product: IProduct): void` — удаляет товар или уменьшает количество
+- `getItems(): ICartItem[]` — возвращает список товаров
+- `clear(): void` — опустошает корзину
 
 ---
 
 ### `OrderModel`
-Stores order details entered by the user.
+Хранит данные текущего заказа.
+Расположение: src/components/models/order-model.ts
 
-**Constructor:**
+**Конструктор:**
 ```ts
 constructor(emitter: EventEmitter)
 ```
 
-**Fields:**
-- `private order: Partial<IOrderData>` - temporary order storage
-- `private emitter: EventEmitter` - event bus
+**Поля:**
+- `private order: Partial<IOrderData>` - объект текущего заказа
+- `private emitter: EventEmitter` - брокер событий
 
-**Methods:**
-- `setPaymentMethod(method: 'card' | 'cash'): void`
-- `setAddress(address: string): void`
-- `setContacts(contacts: { email: string; phone: string }): void`
-- `setItems(items: ICartItem[]): void`
-- `getOrder(): IOrderData` - returns the final order object
-- `clear(): void` - resets order data
+**Методы:**
+- `setPaymentMethod(method: 'card' | 'cash'): void` - устанавливает тип оплаты
+- `setAddress(address: string): void` - устанавливает строку с адресом
+- `setContacts(contacts: { email: string; phone: string }): void` устанавливает строки email и номер телефона
+- `setItems(items: ICartItem[]): void` - массив товаров в корзине
+- `getOrder(): IOrderData` - возвращает заказ или выдает ошибку, если данные неполные
+- `clear(): void` - сбрасывает заказ
 
 ---
 
-## View layer
+## Слой View
 
-All view components receive an instance of `EventEmitter` and emit events upon user interaction.
-View classes store only HTML elements — no application state is stored in view classes.
+Общая концепция
+Все представления (View) получают в конструкторе `EventEmitter`, генерируют события, но не хранят состояние и не обращаются к данным напрямую.
+
+---
+### `MainView`
+Главная страница с галереей товаров.
+Расположение: src/components/views/main.ts
+
+**Конструктор:**
+```ts
+constructor(private emitter: EventEmitter)
+```
+
+**Поля:**
+- `gallery: HTMLElement` - контейнер для карточек
+- `basketButton: HTMLButtonElement` - кнопка корзины
+- `counter: HTMLElement` - счётчик товаров
+
+**Методы:**
+- `render(cards: HTMLElement[]): void` -  рендер карточек
+- `updateCounter(count: number): void` - обновление счётчика
+
+**Эмитируемые события:**
+- `'cart:open'` - при клике на корзину
 
 ---
 
 ### `ProductCardView`
-Renders product cards for each product.
+Создаёт DOM-элемент карточки товара.
+Расположение: src/components/views/product-card.ts
 
-**Constructor:**
+**Конструктор:**
 ```ts
-constructor(container: HTMLElement, emitter: EventEmitter)
+constructor(product: IProduct, template: HTMLTemplateElement, emitter: EventEmitter)
 ```
 
-**Fields:**
-- `private container: HTMLElement`
-- `private emitter: EventEmitter` - broker for emitting events
+**Методы:**
+- `render(): HTMLElement` - возвращает карточку
 
-**Methods:**
-- `render(data: IProduct[]): void` - renders product list
-- Emits: `product:select` on click
-
----
-
-### `ModalView`
-Displays modal windows.
-
-**Constructor:**
-```ts
-constructor(container: HTMLElement, emitter: EventEmitter)
-```
-
-**Fields:**
-- `private container: HTMLElement` - container element for rendering
-- `private emitter: EventEmitter` - broker for emitting events
-
-**Methods:**
-- `open(): void` - shows modal
-- `close(): void` - hides modal
-- `render(product: IProduct): void` - renders product details
-- Emits: `cart:add` on click inside the modal
+**Эмитируемые события:**
+- `'product:select'` - при клике на карточку
+- `'cart:add'` - при добавлении в корзину
+- `'cart:remove'` - при удалении из корзины
 
 ---
 
 ### `CartView`
-Displays cart contents.
+Отображает корзину. Получает готовые DOM-элементы карточек.
+Расположение: src/components/views/cart.ts
 
-**Constructor:**
+**Конструктор:**
 ```ts
-constructor(container: HTMLElement, emitter: EventEmitter)
+constructor(private container: HTMLElement, private emitter: EventEmitter)
 ```
 
-**Fields:**
-- `private container: HTMLElement` - container element for rendering
-- `private emitter: EventEmitter` - broker for emitting events
+**Методы:**
+- `render(data: ICartItem[]): void` - рендер корзины
+- `clear(): void` - очищает содержимое
 
-**Methods:**
-- `render(data: ICartItem[]): void` - renders cart items
-- `clear(): void` - clears cart view
-- Emits: `cart:remove` when item is removed
+**Эмитируемые события:**
+- `'cart:remove'` - при клике на кнопку удаления
+- `'order:open'` - при оформлении заказа
 
 ---
 
-### `OrderFormView`
-Manages multi-step order form UI.
+### `ModalView`
+Универсальный контейнер для отображения модальных окон.
+Расположение: src/components/views/modal.ts
 
-**Constructor:**
+**Конструктор:**
 ```ts
-constructor(container: HTMLElement, emitter: EventEmitter)
+constructor(private container: HTMLElement, private emitter: EventEmitter)
 ```
 
-**Fields:**
-- `private step: number` - current form step
-- `private container: HTMLElement` - container element for rendering
-- `private emitter: EventEmitter` - broker for emitting events
+**Методы:**
+- `render(content: HTMLElement): void` - вставляет контент
+- `open(): void` - показывает окно
+- `close(): void` - скрывает окно
 
-**Methods:**
-- `render(data: IOrderData): void` - placeholder render method
-- `clear(): void` - resets form
-- `renderStep(): void` - renders current form step
-- `showError(message: string): void` - shows error message
-- Emits: `order:payment` on completing the first step (selecting payment method), `order:address` on completing the second step (entering delivery address), `order:contacts` on completing the third step (providing email and phone), `order:ready` on completing the fourth step (final confirmation)
+**Обрабатывает события:**
+- `'modal:close'` - клик по фону и крестику закрывает окно
 
 ---
 
-## Presenter
-Coordinates communication between views and models via EventEmitter.
+### `FormView`
+Абстрактный класс. Родительский класс для форм заказа.
+Расположение: src/components/views/forms/form.ts
 
-**Fields:**
-- `emitter: EventEmitter` - event bus shared by all layers
-- `apiClient: Api` - HTTP API client
-- `productModel: ProductModel` - stores product list and handles selection
-- `cartModel: CartModel` - manages cart state
-- `orderModel: OrderModel` - stores order form data
-- `productCardView: ProductCardView` - renders product cards
-- `modalView: ModalView` - displays product details
-- `cartView: CartView` - shows cart contents
-- `orderFormView: OrderFormView` - handles multi-step order form
-
-**Methods:**
-- `apiClient.get('/products')` - fetches product list and passes to `productModel` and `productCardView`
-- `emitter.on('product:select', ...)` - opens modal with selected product
-- `emitter.on('cart:add', ...)` - adds product to cart and updates cart view
-- `emitter.on('cart:remove', ...)` - removes product from cart and updates cart view
-- `emitter.on('modal:close', ...)` - closes modal
-- `emitter.on('order:payment', ...)` - saves payment method in `orderModel`
-- `emitter.on('order:address', ...)` - saves address in `orderModel`
-- `emitter.on('order:contacts', ...)` - saves contacts in `orderModel`
-- `emitter.on('order:ready', ...)` - finalizes order and emits `order:submit`
-- `emitter.on('order:submit', ...)` - sends order to API, clears models, and resets views
+**Методы:**
+- `render(data?: T): HTMLElement` - рендерит HTML-разметку формы с подставленными значениями из data (если есть). Возвращает DOM-элемент формы
+- `clear(): void` - очищает все поля формы (инпуты, сообщения об ошибке)
+- `showError(message: string): void` - отображает сообщение об ошибке в рамках формы, например при некорректной валидации
+- `abstract bindEvents(data?: T): void` - абстрактный метод. Дочерние классы должны реализовать навешивание обработчиков событий на элементы формы (submit, change и др.)
 
 ---
 
-## Event system
+### `OrderPaymentView`
+Форма: способ оплаты и адрес.
+Расположение: src/components/views/forms/order-payment.ts
 
-### Events used in the app
+**Методы:**
+- `bindEvents()` - валидация и отправка
 
-| Event             | Source class       | Handled in           | Description |
-|------------------|--------------------|-----------------------|-------------|
-| `product:select` | `ProductCardView`  | `index.ts`            | User clicked a product |
-| `cart:add`       | `ModalView`        | `CartModel`           | Product added from modal |
-| `cart:remove`    | `CartView`         | `CartModel`           | Product removed from cart |
-| `modal:open`     | `index.ts`         | `ModalView`           | Opens modal |
-| `modal:close`    | `ModalView`        | `index.ts`            | Closes modal |
-| `order:payment`  | `OrderFormView`    | `OrderModel`          | User selected payment method (`card` or `cash`) |
-| `order:address`  | `OrderFormView`    | `OrderModel`          | User entered address |
-| `order:contacts` | `OrderFormView`    | `OrderModel`          | User entered email and phone |
-| `order:ready`    | `OrderFormView`    | `index.ts`            | All form steps completed; order can be submitted |
+**Эмитируемые события:**
+- `'order:payment'` - эмитируется при выборе способа оплаты (card или cash), передаёт значение как строку
+- `'order:address'` - эмитируется при вводе адреса, передаёт строку
+- `'order:ready'` - эмитируется после успешной валидации всей формы, сигнализируя, что можно переходить к следующему шагу (форма контактов)
 
 ---
 
-## Data types
+### `OrderContactsView`
+Форма: email и телефон.
+Расположение: src/components/views/forms/order-contacts.ts
 
-All types are located in `src/types/` and are imported from `index.ts`.
+**Методы:**
+- `bindEvents()` - валидация и отправка
 
-- `IProduct` — product object: `{ id, title, description, category, image, price }`
-- `ICartItem` — cart item: `{ product: IProduct, quantity: number }`
-- `IOrderData` — order form data: `{ payment, address, email, phone, items }`
-- `AppEventMap` — mapping of event names to payloads
-- `AppEvents`, `IEvent<T>` — union of event keys and event object shape
-- `IView<T>` — interface for view components with optional `clear()`
+**Эмитируемые события:**
+- `'order:contacts'` - эмитируется после успешного ввода email и телефона, передаёт `объект { email, phone }`
+- `'order:submit'` - эмитируется при отправке формы, инициирует финальную отправку данных на сервер
 
-## UML diagram
+---
 
-![UML diagram](./web-larek-uml.drawio.png)
+### `SuccessView`
+Показывает финальное сообщение после успешного оформления заказа.
+Расположение: src/components/views/success.ts
+
+**Методы:**
+- `render(): HTMLElement` - создаёт и возвращает DOM-элемент с сообщением об успешном оформлении заказа
+
+---
+
+## Слой презентера
+Всё взаимодействие между Model и View реализовано в index.ts.
+- Подписка на события через `emitter.on(...)`
+- Создание всех экземпляров классов
+- Загрузка данных с API и передача в модель
+- Обработка событий пользователя
+
+## События
+
+| Событие         | Источник          | Обработчик             | Назначение
+|-----------------|-------------------|------------------------|-----------
+|                 |                   |                        |
+| `product:select`| `ProductCardView` | `ProductModel`         | Выбор товара
+|                 |                   |                        |
+| `preview:change`| `ProductModel`    | `ModalView`            | Отображение
+|                 |                   |                        | товара в
+|                 |                   |                        | модалке
+|                 |                   |                        |
+| `cart:add`      | `ProductCardView` | `CartModel`            | Добавление в
+|                 |                   |                        | корзину
+|                 |                   |                        |
+| `cart:remove`   | `ProductCardView` | `CartModel`            | Удаление из
+|                 |                   |                        | корзины
+|                 |                   |                        |
+| `cart:render`   | `CartModel`       | `CartView`, `MainView` | Рендер
+|                 |                   |                        | корзины и
+|                 |                   |                        | обновление
+|                 |                   |                        | счётчика
+|                 |                   |                        |
+| `cart:open`     | `MainView`        | `CartView`             | Открытие
+|                 |                   |                        | модального
+|                 |                   |                        | окна с
+|                 |                   |                        | корзиной
+|                 |                   |                        |
+| `modal:close`   | `ModalView`       | -                      | Закрытие
+|                 |                   |                        | модального
+|                 |                   |                        | окна
+|                 |                   |                        |
+| `order:open`    | `CartView`        | `ModalView`            | Открыть
+|                 |                   |                        | форму
+|                 |                   |                        | оплаты
+|                 |                   |                        |
+| `order:payment` | `OrderPaymentView`| `OrderModel`           | Установка
+|                 |                   |                        | способа
+|                 |                   |                        | оплаты
+|                 |                   |                        |
+| `order:address` | `OrderPaymentView`| `OrderModel`           | Установка
+|                 |                   |                        | адреса
+|                 |                   |                        |
+| `order:ready`   | `OrderPaymentView`| `ModalView`            | Открыть
+|                 |                   |                        | форму
+|                 |                   |                        | контактов
+|                 |                   |                        |
+| `order:contacts`|`OrderContactsView`| `OrderModel`           | Установка
+|                 |                   |                        | email и
+|                 |                   |                        | телефона
+|                 |                   |                        |
+| `order:submit`  |`OrderContactsView`| `index.ts`, `API`      | отправка
+|                 |                   |                        | заказа,
+|                 |                   |                        | показ
+|                 |                   |                        | `SuccessView`
+|-----------------|-------------------|------------------------|-----------
+
+
+## Типы данных (src/types)
+
+- `IProduct` - товар
+```ts
+interface IProduct {
+  id: string;            // уникальный идентификатор товара
+  title: string;         // название
+  description: string;   // описание
+  category: string;      // категория (например, "софт", "другое")
+  image: string;         // URL изображения
+  price: number;         // цена
+}
+```
+
+- `ICartItem` - товар с количеством в корзине
+```ts
+interface ICartItem {
+  product: IProduct;     // сам товар
+  quantity: number;      // количество в корзине
+}
+```
+
+- `IOrderContacts` - контакты пользователя
+```ts
+interface IOrderContacts {
+  email: string;         // адрес электронной почты
+  phone: string;         // номер телефона
+}
+```
+
+- `IOrderPayment` - способ оплаты
+```ts
+interface IOrderPayment {
+  payment: 'card' | 'cash'; // способ оплаты
+  address: string;          // адрес доставки
+}
+```
+
+- `IOrderData` - финальная структура заказа
+```ts
+interface IOrderData {
+  payment: 'card' | 'cash'; // способ оплаты
+  address: string;          // адрес
+  email: string;            // email клиента
+  phone: string;            // номер телефона клиента
+  items: ICartItem[];       // список товаров с количеством
+}
+```
+
+---
+
+## Event emitter
+Реализация паттерна Observer.
+
+**Методы:**
+- `on(eventName, handler)` - регистрирует обработчик `handler` на событие `eventName`. Можно регистрировать несколько обработчиков на одно событие.
+- `off(eventName, handler)` - удаляет обработчик `handler` для события `eventName`.
+- `emit(eventName, data?)` - вызывает все обработчики, зарегистрированные на событие `eventName`, передаёт им объект `data`.
+
+---
+
+## API
+
+**Методы:**
+- `getProducts(): Promise<IProduct[]>` - выполняет GET-запрос к серверу и возвращает список товаров в формате `IProduct[]`
+- `order(data: IOrderData): Promise<void>` - отправляет POST-запрос с финальными данными заказа на сервер. Возвращает `Promise<void>`; при успешной отправке открывается окно `SuccessView`.
