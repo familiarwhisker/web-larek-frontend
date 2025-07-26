@@ -20,6 +20,13 @@ export class ModalView {
         this.emitter.emit('modal:close');
       }
     });
+
+    // Закрытие по клавише Esc
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.container.classList.contains('modal_active')) {
+        this.emitter.emit('modal:close');
+      }
+    });
   }
 
   open(): void {
@@ -30,6 +37,10 @@ export class ModalView {
   close(): void {
     this.container.classList.remove('modal_active');
     document.body.style.overflow = '';
+  }
+
+  isOpen(): boolean {
+    return this.container.classList.contains('modal_active');
   }
 
   render(content: HTMLElement): void {

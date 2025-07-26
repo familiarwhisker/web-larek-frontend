@@ -44,7 +44,13 @@ emitter.on('cart:add', (productId: string) => {
 
 emitter.on('cart:remove', (productId: string) => {
   appState.removeProductFromCart(productId);
-  appState.selectProduct(productId); // обновить попап
+
+  // Если корзина открыта, перерисовываем её
+  if (modalView.isOpen()) {
+    const items = appState.getCartItems();
+    const cartElement = cartView.render(items);
+    modalView.render(cartElement);
+  }
 });
 
 emitter.on('cart:toggle', (productId: string) => {
