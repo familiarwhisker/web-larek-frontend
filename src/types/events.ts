@@ -31,10 +31,3 @@ export interface AppEventMap {
   // Modal
   'modal:close': undefined;
 }
-
-export type AppEvents = keyof AppEventMap;
-
-export interface IEvent<T extends AppEvents = AppEvents> {
-  type: T;
-  payload?: AppEventMap[T];
-}

@@ -1,8 +1,7 @@
 import { ICartItem } from '../../types';
-import { IView } from '../../types';
 import { EventEmitter } from '../base/event-emitter';
 
-export class CartView implements IView<ICartItem[]> {
+export class CartView {
   constructor(private container: HTMLElement, private emitter: EventEmitter) {}
 
   render(data: ICartItem[]): HTMLElement {

@@ -3,7 +3,6 @@ import { EventEmitter } from '../base/event-emitter';
 export class ModalView {
   private content: HTMLElement;
   private closeButton: HTMLElement;
-  private scrollY = 0;
 
   constructor(private container: HTMLElement, private emitter: EventEmitter) {
     this.content = container.querySelector('.modal__content')!;

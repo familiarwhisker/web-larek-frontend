@@ -16,16 +16,12 @@ export class MainView {
     });
   }
 
-  /**
-   * Рендерит карточки в галерею
-   */
+  // Рендерит карточки в галерею
   render(cards: HTMLElement[]): void {
     this.gallery.replaceChildren(...cards);
   }
 
-  /**
-   * Обновляет счётчик товаров в корзине
-   */
+  // Обновляет счётчик товаров в корзине
   updateCounter(count: number): void {
     this.counter.textContent = String(count);
   }
