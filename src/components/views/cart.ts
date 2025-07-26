@@ -20,7 +20,7 @@ export class CartView implements IView<ICartItem[]> {
 
     if (!itemTemplate) {
       console.error('Card basket template not found!');
-      return;
+      return document.createElement('div');
     }
 
     list.innerHTML = '';
@@ -38,7 +38,7 @@ export class CartView implements IView<ICartItem[]> {
       if (indexEl) indexEl.textContent = (index + 1).toString();
 
       deleteBtn?.addEventListener('click', () => {
-        this.emitter.emit('cart:remove', item.product);
+        this.emitter.emit('cart:remove', item.product.id);
       });
 
       list.appendChild(itemNode);
@@ -53,11 +53,10 @@ export class CartView implements IView<ICartItem[]> {
       this.emitter.emit('order:open');
     });
 
-    this.container.innerHTML = '';
-    this.container.appendChild(basketFragment);
+    return basketFragment;
   }
 
   clear(): void {
-    this.container.innerHTML = '';
+    if (this.container) this.container.innerHTML = '';
   }
 }

@@ -3,8 +3,12 @@
 
 .modal {
   @include mixins.sublayer;
-  // height: max-content;
-  position: absolute;
+  height: max-content;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: none;
   justify-content: center;
   background-color: $overlayBackground;
@@ -22,7 +26,7 @@
     @include mixins.flex(column);
     gap: $defaultPadding;
     background-color: $background;
-    // min-height: 90vmin;
+    min-height: 90vmin;
     border-radius: 3rem;
     box-sizing: border-box;
     position: relative;

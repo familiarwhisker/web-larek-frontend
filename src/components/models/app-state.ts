@@ -25,40 +25,53 @@ export class AppState {
 
   selectProduct(product_id: string) {
     this.selectedProduct = this.products.find(p => p.id === product_id) || null;
+    if (this.selectedProduct) {
+      this.emitter.emit('preview:change', this.selectedProduct);
+    }
   }
 
-  addProductToCart(product_id: string) {
-    const product = this.products.find(p => p.id === product_id);
+  getSelectedProduct(): IProduct | null {
+    return this.selectedProduct;
+  }
+
+  getCartItems(): ICartItem[] {
+    return this.cartItems;
+  }
+
+  isProductInCart(productId: string): boolean {
+    return this.cartItems.some(item => item.product.id === productId);
+  }
+
+  addProductToCart(productId: string) {
+    const product = this.products.find(p => p.id === productId);
     if (!product) return;
 
-    const item = this.cartItems.find(i => i.product.id === product.id);
+    const item = this.cartItems.find(i => i.product.id === productId);
     if (item) {
       item.quantity++;
-      this.emitter.emit('cart:render', this.cartItems);
     } else {
       this.cartItems.push({ product, quantity: 1 });
-      this.emitter.emit('cart:render', this.cartItems);
-      this.emitter.emit('modal:close');
     }
-    this.emitter.emit('cart:render', this.cartItems);
+
+    this.emitter.emit('cart:updated', this.cartItems);
     this.emitter.emit('cart_counter:render', this.cartItems.length);
-    this.emitter.emit('modal:close');
   }
 
-  removeProductFromCart(product: ICartItem['product']) {
-    const productId = product.id;
+  removeProductFromCart(productId: string) {
     const item = this.cartItems.find(i => i.product.id === productId);
     if (!item) return;
+
     if (item.quantity > 1) {
       item.quantity--;
     } else {
       this.cartItems = this.cartItems.filter(i => i.product.id !== productId);
     }
-    this.emitter.emit('cart:render', this.cartItems);
+
+    this.emitter.emit('cart:updated', this.cartItems);
     this.emitter.emit('cart_counter:render', this.cartItems.length);
   }
 
-  getCartItems(): ICartItem[] {
-    return this.cartItems;
+  getCartItemsCount(): number {
+    return this.cartItems.length;
   }
 }

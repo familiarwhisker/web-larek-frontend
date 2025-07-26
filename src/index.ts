@@ -2,6 +2,7 @@ import './scss/styles.scss';
 
 import Api from './components/base/api';
 import { EventEmitter } from './components/base/event-emitter';
+import { API_URL } from './utils/constants';
 
 import { ProductCardView } from './components/views/product-card';
 import { ModalView } from './components/views/modal';
@@ -10,29 +11,23 @@ import { MainView } from './components/views/main';
 import { OrderPaymentView } from './components/views/forms/order-payment';
 import { OrderContactsView } from './components/views/forms/order-contacts';
 import { SuccessView } from './components/views/success';
-
-import { IProduct } from './types';
-
-import { ProductModel } from './components/models/product-model';
-import { OrderModel } from './components/models/order-model';
 import { AppState } from './components/models/app-state';
 
 const emitter = new EventEmitter();
-const apiClient = new Api(process.env.API_ORIGIN || '');
+const apiClient = new Api(API_URL);
 
-// Instantiate AppState (the Model)
 const appState = new AppState(emitter, apiClient);
 
 const mainView = new MainView(emitter);
 
-// Подписки на события
 emitter.on('product:select', (productId: string) => {
   appState.selectProduct(productId);
 });
 
 emitter.on('preview:change', (product) => {
   const previewTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
-  const modalCard = new ProductCardView(product, previewTemplate, emitter).render();
+  const inCart = appState.isProductInCart(product.id);
+  const modalCard = new ProductCardView(product, previewTemplate, emitter, inCart).render();
 
   modalView.render(modalCard);
   modalView.open();
@@ -42,26 +37,32 @@ emitter.on('modal:close', () => {
   modalView.close();
 });
 
-emitter.on('cart:render', () => {
-  const items = cartModel.getItems();
-  cartView.render(items);
-  mainView.updateCounter(items.length);
+emitter.on('cart:add', (productId: string) => {
+  appState.addProductToCart(productId);
+  appState.selectProduct(productId); // обновить попап
 });
 
-emitter.on('cart:add', (product) => {
-  cartModel.addProduct(product);
-  emitter.emit('cart:render');
+emitter.on('cart:remove', (productId: string) => {
+  appState.removeProductFromCart(productId);
+  appState.selectProduct(productId); // обновить попап
 });
 
-emitter.on('cart:remove', (product) => {
-  cartModel.removeProduct(product);
-  emitter.emit('cart:render');
+emitter.on('cart:toggle', (productId: string) => {
+  if (appState.isProductInCart(productId)) {
+    appState.removeProductFromCart(productId);
+  } else {
+    appState.addProductToCart(productId);
+  }
+});
+
+emitter.on('cart_counter:render', (count: number) => {
+  mainView.updateCounter(count);
 });
 
 emitter.on('order:submit', (order) => {
   apiClient.post('/order', order).then(() => {
-    cartModel.clear();
-    orderModel.clear();
+    //appState.clearCart();
+    //appState.clearOrder();
     emitter.emit('cart:render');
 
     const successView = new SuccessView();
@@ -72,19 +73,19 @@ emitter.on('order:submit', (order) => {
 });
 
 emitter.on('order:open', () => {
-  const paymentForm = orderPaymentView.render(orderModel);
+  const paymentForm = orderPaymentView.render(appState);
   modalView.render(paymentForm);
   modalView.open();
 });
 
 emitter.on('order:ready', () => {
-  const contactForm = orderContactsView.render(orderModel);
+  const contactForm = orderContactsView.render(appState);
   modalView.render(contactForm);
   modalView.open();
 });
 
 emitter.on('cart:open', () => {
-  const items = cartModel.getItems();
+  const items = appState.getCartItems();
   const cartElement = cartView.render(items);
   modalView.render(cartElement);
   modalView.open();
@@ -92,7 +93,10 @@ emitter.on('cart:open', () => {
 
 emitter.on('products:loaded', (products) => {
   const catalogTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
-  const cards = products.map(p => new ProductCardView(p, catalogTemplate, emitter).render());
+  const cards = products.map(p => {
+    const inCart = appState.isProductInCart(p.id);
+    return new ProductCardView(p, catalogTemplate, emitter, inCart).render();
+  });
   mainView.render(cards);
 });
 

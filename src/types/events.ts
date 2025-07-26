@@ -6,9 +6,11 @@ export interface AppEventMap {
   '*': undefined;
   'product:select': string;
   'preview:change': IProduct;
-  'cart:add': IProduct;
-  'cart:remove': IProduct;
+  'cart:add': string;
+  'cart:remove': string;
+  'cart:toggle': string;
   'cart:render': ICartItem[];
+  'cart:updated': ICartItem[];
   'cart_counter:render': number;
   'modal:close': undefined;
   'order:submit': IOrderData;
@@ -21,7 +23,6 @@ export interface AppEventMap {
   'products:loaded': IProduct[];
   'products:error': Error;
 }
-
 
 export type AppEvents = keyof AppEventMap;
 
