@@ -7,12 +7,12 @@ export abstract class FormView<T = unknown> {
     protected template: HTMLTemplateElement,
     protected emitter: EventEmitter
   ) {
-    this.element = template.content.firstElementChild!.cloneNode(true) as HTMLFormElement;
   }
 
   abstract bindEvents(data?: T): void;
 
   render(data?: T): HTMLElement {
+    this.element = this.template.content.firstElementChild!.cloneNode(true) as HTMLFormElement;
     this.bindEvents(data);
     return this.element;
   }

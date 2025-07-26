@@ -1,14 +1,13 @@
 import { FormView } from './form';
-import { IOrderData } from '../../../types/order';
 
 export class OrderPaymentView extends FormView {
-  bindEvents(data?: IOrderData): void {
+  bindEvents(): void {
     const cardBtn = this.element.querySelector('[name="card"]')!;
     const cashBtn = this.element.querySelector('[name="cash"]')!;
     const addressInput = this.element.querySelector<HTMLInputElement>('input[name="address"]')!;
     const submitBtn = this.element.querySelector<HTMLButtonElement>('button[type="submit"]')!;
 
-    let selectedMethod: 'card' | 'cash' | null = null;
+    let selectedMethod: 'online' | 'cash' | null = null;
 
     const validate = () => {
       if (selectedMethod && addressInput.value.trim()) {
@@ -19,27 +18,31 @@ export class OrderPaymentView extends FormView {
     };
 
     cardBtn.addEventListener('click', () => {
-      selectedMethod = 'card';
-      this.emitter.emit('order:payment', { method: 'card' });
+      selectedMethod = 'online';
+      cardBtn.classList.add('button_alt-active');
+      cashBtn.classList.remove('button_alt-active');
+      this.emitter.emit('order:set_payment_method', { method: 'online' });
       validate();
     });
 
     cashBtn.addEventListener('click', () => {
       selectedMethod = 'cash';
-      this.emitter.emit('order:payment', { method: 'cash' });
+      cashBtn.classList.add('button_alt-active');
+      cardBtn.classList.remove('button_alt-active');
+      this.emitter.emit('order:set_payment_method', { method: 'cash' });
       validate();
     });
 
     addressInput.addEventListener('input', () => {
       if (addressInput.value.trim()) {
-        this.emitter.emit('order:address', { value: addressInput.value.trim() });
+        this.emitter.emit('order:set_address', { value: addressInput.value.trim() });
       }
       validate();
     });
 
     this.element.addEventListener('submit', (e) => {
       e.preventDefault();
-      this.emitter.emit('order:ready');
+      this.emitter.emit('order:open_contacts_form');
     });
   }
 }

@@ -16,17 +16,17 @@ export class AppState {
     this.api.get<ApiListResponse<IProduct>>('/product/')
       .then((response) => {
         this.products = response.items;
-        this.emitter.emit('products:loaded', this.products);
+        this.emitter.emit('catalog:loaded', this.products);
       })
       .catch((error) => {
-        this.emitter.emit('products:error', error);
+        this.emitter.emit('catalog:error', error);
       });
   }
 
   selectProduct(product_id: string) {
     this.selectedProduct = this.products.find(p => p.id === product_id) || null;
     if (this.selectedProduct) {
-      this.emitter.emit('preview:change', this.selectedProduct);
+      this.emitter.emit('product:show_preview', this.selectedProduct);
     }
   }
 
@@ -44,34 +44,39 @@ export class AppState {
 
   addProductToCart(productId: string) {
     const product = this.products.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {
+      console.log('Товар не найден', productId);
+      return;
+    }
 
     const item = this.cartItems.find(i => i.product.id === productId);
     if (item) {
-      item.quantity++;
+      console.log('Этот товар уже в корзине', item);
     } else {
       this.cartItems.push({ product, quantity: 1 });
     }
 
-    this.emitter.emit('cart:updated', this.cartItems);
-    this.emitter.emit('cart_counter:render', this.cartItems.length);
+    this.emitter.emit('cart:render_counter', this.cartItems.length);
   }
 
   removeProductFromCart(productId: string) {
     const item = this.cartItems.find(i => i.product.id === productId);
-    if (!item) return;
-
-    if (item.quantity > 1) {
-      item.quantity--;
-    } else {
-      this.cartItems = this.cartItems.filter(i => i.product.id !== productId);
+    if (!item) {
+      console.log('Товар не найден', productId);
+      return;
     }
 
-    this.emitter.emit('cart:updated', this.cartItems);
-    this.emitter.emit('cart_counter:render', this.cartItems.length);
+    this.cartItems = this.cartItems.filter(i => i.product.id !== productId);
+
+    this.emitter.emit('cart:render_counter', this.cartItems.length);
   }
 
   getCartItemsCount(): number {
     return this.cartItems.length;
+  }
+
+  clearCart(): void {
+    this.cartItems = [];
+    this.emitter.emit('cart:render_counter', 0);
   }
 }

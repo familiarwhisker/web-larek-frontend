@@ -12,7 +12,7 @@ export class MainView {
 
     // Открытие корзины по кнопке
     this.basketButton.addEventListener('click', () => {
-      this.emitter.emit('cart:open');
+      this.emitter.emit('cart:open_modal');
     });
   }
 

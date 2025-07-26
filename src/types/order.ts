@@ -1,9 +1,8 @@
-import { ICartItem } from './cart';
-
 export interface IOrderData {
-  payment: 'card' | 'cash';
+  payment: 'online' | 'cash';
   address: string;
   email: string;
   phone: string;
-  items: ICartItem[];
+  total: number;
+  items: string[]; // массив ID товаров
 }

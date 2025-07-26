@@ -10,7 +10,7 @@ export class ProductCardView {
     private product: IProduct,
     private template: HTMLTemplateElement,
     private emitter: EventEmitter,
-    private inCart: boolean = false // новый параметр
+    private inCart: boolean = false
   ) {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
 
@@ -51,19 +51,19 @@ export class ProductCardView {
         this.addButton.textContent = 'Удалить из корзины';
         this.addButton.addEventListener('click', (e) => {
           e.stopPropagation();
-          this.emitter.emit('cart:remove', this.product.id);
+          this.emitter.emit('product:remove_from_cart', this.product.id);
         });
       } else {
         this.addButton.textContent = 'В корзину';
         this.addButton.addEventListener('click', (e) => {
           e.stopPropagation();
-          this.emitter.emit('cart:add', this.product.id);
+          this.emitter.emit('product:add_to_cart', this.product.id);
         });
       }
     } else if (this.addButton) {
       this.addButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.emitter.emit('cart:add', this.product.id);
+        this.emitter.emit('product:add_to_cart', this.product.id);
       });
     }
 
@@ -72,7 +72,7 @@ export class ProductCardView {
     if (deleteButton) {
       deleteButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.emitter.emit('cart:remove', this.product.id);
+        this.emitter.emit('product:remove_from_cart', this.product.id);
       });
     }
   }

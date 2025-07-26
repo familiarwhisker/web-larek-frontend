@@ -38,7 +38,7 @@ export class CartView implements IView<ICartItem[]> {
       if (indexEl) indexEl.textContent = (index + 1).toString();
 
       deleteBtn?.addEventListener('click', () => {
-        this.emitter.emit('cart:remove', item.product.id);
+        this.emitter.emit('product:remove_from_cart', item.product.id);
       });
 
       list.appendChild(itemNode);
@@ -50,8 +50,19 @@ export class CartView implements IView<ICartItem[]> {
 
     const orderButton = basketFragment.querySelector('[data-order]');
     orderButton?.addEventListener('click', () => {
-      this.emitter.emit('order:open');
+      this.emitter.emit('order:open_payment_form');
     });
+
+    // Делаем кнопку "Оформить" неактивной, если корзина пуста
+    if (orderButton) {
+      if (data.length === 0) {
+        orderButton.setAttribute('disabled', 'disabled');
+        orderButton.classList.add('button_disabled');
+      } else {
+        orderButton.removeAttribute('disabled');
+        orderButton.classList.remove('button_disabled');
+      }
+    }
 
     return basketFragment;
   }

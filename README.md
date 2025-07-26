@@ -75,7 +75,7 @@ yarn build
 ---
 
 ## MVP-поток событий
-View → EventEmitter → Model → EventEmitter → View
+View → Presenter → Model → Presenter → View
 
 Пример:
 Клик на карточку → product:select

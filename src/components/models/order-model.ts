@@ -6,7 +6,7 @@ export class OrderModel {
 
   constructor(private emitter: EventEmitter) {}
 
-  setPaymentMethod(method: 'card' | 'cash') {
+  setPaymentMethod(method: 'online' | 'cash') {
     this.order.payment = method;
   }
 
@@ -20,17 +20,19 @@ export class OrderModel {
   }
 
   setItems(items: ICartItem[]) {
-    this.order.items = items;
+    this.order.items = items.map(item => item.product.id);
+    this.order.total = items.reduce((sum, item) => sum + item.product.price, 0);
   }
 
   clear() {
     this.order = {};
   }
 
+  // Получение финального заказа
   getOrder(): IOrderData {
-    const { payment, address, email, phone, items } = this.order;
+    const { payment, address, email, phone, total, items } = this.order;
 
-    if (!payment || !address || !email || !phone || !items) {
+    if (!payment || !address || !email || !phone || !total || !items) {
       throw new Error('Данные заказа неполные');
     }
 
@@ -39,6 +41,7 @@ export class OrderModel {
       address,
       email,
       phone,
+      total,
       items,
     };
   }

@@ -1,9 +1,7 @@
 import { FormView } from './form';
-import { IOrderData } from '../../../types/order';
-
 
 export class OrderContactsView extends FormView {
-  bindEvents(data?: IOrderData): void {
+  bindEvents(): void {
     const emailInput = this.element.querySelector<HTMLInputElement>('input[name="email"]')!;
     const phoneInput = this.element.querySelector<HTMLInputElement>('input[name="phone"]')!;
     const submitBtn = this.element.querySelector<HTMLButtonElement>('button[type="submit"]')!;
@@ -30,8 +28,7 @@ export class OrderContactsView extends FormView {
         return;
       }
 
-      this.emitter.emit('order:contacts', { email, phone });
-      this.emitter.emit('order:submit');
+      this.emitter.emit('order:set_contacts', { email, phone });
     });
   }
 }
