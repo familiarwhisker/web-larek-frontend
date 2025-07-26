@@ -2,10 +2,9 @@ import { IProduct } from './product';
 import { IOrderData } from './order';
 import { ICartItem } from './cart';
 
-
 export interface AppEventMap {
   '*': undefined;
-  'product:select': IProduct;
+  'product:select': string;
   'preview:change': IProduct;
   'cart:add': IProduct;
   'cart:remove': IProduct;
@@ -19,7 +18,8 @@ export interface AppEventMap {
   'order:ready': undefined;
   'order:open': undefined;
   'cart:open': undefined;
-
+  'products:loaded': IProduct[];
+  'products:error': Error;
 }
 
 

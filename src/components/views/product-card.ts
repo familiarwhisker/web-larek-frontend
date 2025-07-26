@@ -1,5 +1,5 @@
 import { IProduct } from '../../types';
-import { EventEmitter } from '../base/event_emitter';
+import { EventEmitter } from '../base/event-emitter';
 
 export class ProductCardView {
   private element: HTMLElement;
@@ -26,7 +26,7 @@ export class ProductCardView {
 
     // Общий клик по карточке (открытие модалки)
     this.element.addEventListener('click', () => {
-      this.emitter.emit('product:select', product);
+      this.emitter.emit('product:select', this.product.id);
     });
 
     // Добавить в корзину (только для preview-карточки)

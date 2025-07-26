@@ -1,4 +1,4 @@
-import { EventEmitter } from '../../base/event_emitter';
+import { EventEmitter } from '../../base/event-emitter';
 
 export abstract class FormView<T = unknown> {
   protected element: HTMLFormElement;

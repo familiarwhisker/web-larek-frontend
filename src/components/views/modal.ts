@@ -1,4 +1,4 @@
-import { EventEmitter } from '../base/event_emitter';
+import { EventEmitter } from '../base/event-emitter';
 
 export class ModalView {
   private content: HTMLElement;

@@ -1,7 +1,7 @@
 import './scss/styles.scss';
 
 import Api from './components/base/api';
-import { EventEmitter } from './components/base/event_emitter';
+import { EventEmitter } from './components/base/event-emitter';
 
 import { ProductCardView } from './components/views/product-card';
 import { ModalView } from './components/views/modal';
@@ -14,15 +14,20 @@ import { SuccessView } from './components/views/success';
 import { IProduct } from './types';
 
 import { ProductModel } from './components/models/product-model';
-import { CartModel } from './components/models/cart-model';
 import { OrderModel } from './components/models/order-model';
+import { AppState } from './components/models/app-state';
 
 const emitter = new EventEmitter();
 const apiClient = new Api(process.env.API_ORIGIN || '');
 
+// Instantiate AppState (the Model)
+const appState = new AppState(emitter, apiClient);
+
+const mainView = new MainView(emitter);
+
 // Подписки на события
-emitter.on('product:select', (product) => {
-  productModel.selectProduct(product.id);
+emitter.on('product:select', (productId: string) => {
+  appState.selectProduct(productId);
 });
 
 emitter.on('preview:change', (product) => {
@@ -85,23 +90,14 @@ emitter.on('cart:open', () => {
   modalView.open();
 });
 
-// Объявление моделей
-const productModel = new ProductModel(emitter);
-const cartModel = new CartModel(emitter);
-const orderModel = new OrderModel(emitter);
-
-// Инициализация Views
-const mainView = new MainView(emitter);
-
-apiClient.get<IProduct[]>('/products').then((products) => {
-  productModel.setProducts(products);
-
+emitter.on('products:loaded', (products) => {
   const catalogTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
-  const cards = products.map(p =>
-    new ProductCardView(p, catalogTemplate, emitter).render()
-  );
-
+  const cards = products.map(p => new ProductCardView(p, catalogTemplate, emitter).render());
   mainView.render(cards);
+});
+
+emitter.on('products:error', (error) => {
+  console.error('Product loading error:', error);
 });
 
 const modalView = new ModalView(
