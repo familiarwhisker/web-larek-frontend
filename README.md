@@ -2,32 +2,25 @@
 
 Tech stack: HTML, SCSS, TS, Webpack
 
-## Структура проекта
+### Ключевые файлы и папки
 
-src/
-├── components/
-│   ├── base/                 — инфраструктурные классы (API, EventEmitter)
-│   ├── models/               — слой Модели (данные и логика)
-│   ├── views/                — слой Представления (отрисовка)
-│   │   ├── forms/            — формы оформления заказа
-│   └── ...                   — другие view-компоненты
-├── types/                    — типы и интерфейсы
-├── pages/index.html          — основной HTML-шаблон
-├── scss/                     — стили
-└── index.ts                  — точка входа, слой Презентера
-
-### Ключевые файлы
-
-- `src/pages/index.html` — HTML-шаблон страницы
-- `src/types/index.ts` — корневой файл типов
-- `src/index.ts` — точка входа, презентер
-- `src/scss/styles.scss` — корневой файл стилей
-- `src/components/base/api.ts` - API-клиент
-- `src/components/base/event_emitter.ts` - реализация паттерна «Наблюдатель»
-- `src/components/models/` - классы модели
-- `src/components/views/` - классы представлений
-- `src/utils/constants.ts` — константы
-- `src/utils/utils.ts` — вспомогательные функции
+- `src/index.ts` — точка входа, слой Presenter (MVP)
+- `src/pages/index.html` — основной HTML-шаблон
+- `src/components/base/` — инфраструктурные классы (API-клиент, EventEmitter)
+  - `api.ts` — API-клиент
+  - `event-emitter.ts` — событийный брокер
+- `src/components/models/` — слой моделей (AppState, OrderModel)
+  - `app-state.ts` — состояние приложения (каталог, корзина)
+  - `order-model.ts` — модель заказа
+- `src/components/views/` — слой представлений (View)
+  - `main.ts`, `cart.ts`, `modal.ts`, `product-card.ts`, `success.ts` — основные View-компоненты
+  - `forms/` — формы заказа: `order-payment.ts`, `order-contacts.ts`, `form.ts`
+- `src/types/` — типы и интерфейсы (product, cart, order, events и др.)
+- `src/scss/styles.scss` — основной файл стилей
+- `src/common.blocks/` — SCSS-блоки для компонентов (BEM)
+- `src/utils/` — вспомогательные функции и константы
+  - `constants.ts` — константы
+  - `utils.ts` — утилиты
 
 ---
 
