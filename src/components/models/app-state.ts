@@ -98,6 +98,10 @@ export class AppState {
     return this.cartItems.length;
   }
 
+  getCartTotalPrice(): number {
+    return this.cartItems.reduce((sum, item) => sum + item.price, 0);
+  }
+
   clearCart(): void {
     this.cartItems = [];
     this.emitter.emit('cart:render_counter', 0);

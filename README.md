@@ -328,6 +328,7 @@ constructor(emitter: EventEmitter)
 - `getCartItemsCount(): number` — возвращает количество товаров в корзине
 - `clearCart(): void` — очищает корзину и обновляет счетчик
 - `isProductInCart(productId: string): boolean` — проверяет наличие товара в корзине
+- `getCartTotalPrice(): number` — рассчитывает и возвращает общую стоимость товаров в корзине
 
 **Управление выбором товара:**
 - `set selectedProductId(value: string)` — устанавливает выбранный товар и эмитит событие показа превью
@@ -439,6 +440,7 @@ constructor(private container: HTMLElement, private emitter: EventEmitter)
 **Методы:**
 - `render(data: ICartItem[]): HTMLElement` — рендер корзины
 - `clear(): void` — очищает содержимое
+- `updateTotalPrice(total: number): void` — отображает общую стоимость товаров (не рассчитывает, только показывает переданное значение)
 
 **Эмитируемые события:**
 - `'product:remove_from_cart'` — клик по кнопке удаления товара

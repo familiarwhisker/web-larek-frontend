@@ -83,7 +83,7 @@ emitter.on('product:remove_from_cart', (productId: string) => {
           .render(item, true, 'cart', index)
       );
       cartView.render(cartCards);
-      cartView.updateTotalPrice(appState.cartItems.reduce((sum, item) => sum + item.price, 0));
+      cartView.updateTotalPrice(appState.getCartTotalPrice());
     }
     // Если в модальном окне отображается превью товара, обновляем его
     else if (appState.isShowingProductPreview()) {
@@ -163,7 +163,7 @@ emitter.on('cart:open_modal', () => {
   );
 
   const cartElement = cartView.render(cartCards);
-  cartView.updateTotalPrice(appState.cartItems.reduce((sum, item) => sum + item.price, 0));
+  cartView.updateTotalPrice(appState.getCartTotalPrice());
   modalView.render(cartElement);
   modalView.open();
   appState.modalState = 'cart';
