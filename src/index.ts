@@ -18,19 +18,19 @@ const emitter = new EventEmitter();
 const apiClient = new Api(API_URL);
 
 const appState = new AppState(emitter);
-const orderModel = new OrderModel();
+const orderModel = new OrderModel(emitter);
 
 const mainView = new MainView(emitter);
 
 const modalView = new ModalView(document.querySelector('#modal-container')!, emitter);
-const cartView = new CartView(document.querySelector('#cart')!, emitter);
+const cartView = new CartView(document.querySelector('#basket') as HTMLTemplateElement, emitter);
 const orderPaymentView = new OrderPaymentView(document.querySelector('#order') as HTMLTemplateElement, emitter);
 const orderContactsView = new OrderContactsView(document.querySelector('#contacts') as HTMLTemplateElement, emitter);
 
 emitter.on('products:loaded', () => {
   const cards = appState.products.map(
     p => new ProductCardView(document.querySelector('#card-catalog') as HTMLTemplateElement, emitter)
-      .render(p, appState.isProductInCart(p.id))
+      .render(p, appState.isProductInCart(p.id), 'catalog')
   );
   mainView.render(cards);
 });
@@ -46,7 +46,7 @@ emitter.on('product:select', (productId: string) => {
 emitter.on('product:show_preview', (product) => {
   modalView.render(
     new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
-      .render(product, appState.isProductInCart(product.id))
+      .render(product, appState.isProductInCart(product.id), 'preview')
   );
   modalView.open();
   appState.modalState = 'product_preview';
@@ -59,6 +59,17 @@ emitter.on('modal:close', () => {
 emitter.on('product:add_to_cart', (productId: string) => {
   appState.addProductToCart(productId);
   appState.selectedProductId = productId;
+
+  // Если в модальном окне отображается превью товара, обновляем его
+  if (modalView.isOpen() && appState.isShowingProductPreview()) {
+    const product = appState.products.find(p => p.id === productId);
+    if (product) {
+      modalView.render(
+        new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
+          .render(product, appState.isProductInCart(product.id), 'preview')
+      );
+    }
+  }
 });
 
 emitter.on('product:remove_from_cart', (productId: string) => {
@@ -67,7 +78,12 @@ emitter.on('product:remove_from_cart', (productId: string) => {
   if (modalView.isOpen()) {
     // Если в модальном окне отображается корзина, обновляем её
     if (appState.isShowingCart()) {
-      modalView.render(cartView.render(appState.cartItems));
+      const cartCards = appState.cartItems.map(
+        (item, index) => new ProductCardView(document.querySelector('#card-basket') as HTMLTemplateElement, emitter)
+          .render(item, true, 'cart', index)
+      );
+      cartView.render(cartCards);
+      cartView.updateTotalPrice(appState.cartItems.reduce((sum, item) => sum + item.price, 0));
     }
     // Если в модальном окне отображается превью товара, обновляем его
     else if (appState.isShowingProductPreview()) {
@@ -75,7 +91,7 @@ emitter.on('product:remove_from_cart', (productId: string) => {
       if (product) {
         modalView.render(
           new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
-            .render(product, appState.isProductInCart(product.id))
+            .render(product, appState.isProductInCart(product.id), 'preview')
         );
       }
     }
@@ -88,14 +104,15 @@ emitter.on('cart:render_counter', (count: number) => {
 
 emitter.on('order:open_payment_form', () => {
   orderModel.setItems(appState.cartItems);
+  orderModel.clearFormData();
 
-  modalView.render(orderPaymentView.render({}));
+  modalView.render(orderPaymentView.render());
   modalView.open();
   appState.modalState = 'payment';
 });
 
 emitter.on('order:open_contacts_form', () => {
-  modalView.render(orderContactsView.render({}));
+  modalView.render(orderContactsView.render());
   modalView.open();
   appState.modalState = 'contacts';
 });
@@ -111,6 +128,16 @@ emitter.on('order:set_address', (data: { value: string }) => {
 emitter.on('order:set_contacts', (data: { email: string; phone: string }) => {
   orderModel.setContacts(data.email, data.phone);
   emitter.emit('order:submit_request');
+});
+
+emitter.on('order:validate_payment_form', (formData) => {
+  const validationResult = orderModel.validatePaymentForm(formData);
+  orderPaymentView.updateValidationResult(validationResult);
+});
+
+emitter.on('order:validate_contacts_form', (formData) => {
+  const validationResult = orderModel.validateContactsForm(formData);
+  orderContactsView.updateValidationResult(validationResult);
 });
 
 emitter.on('order:submit_request', () => {
@@ -130,8 +157,13 @@ emitter.on('order:submit_request', () => {
 });
 
 emitter.on('cart:open_modal', () => {
-  const items = appState.cartItems;
-  const cartElement = cartView.render(items);
+  const cartCards = appState.cartItems.map(
+    (item, index) => new ProductCardView(document.querySelector('#card-basket') as HTMLTemplateElement, emitter)
+      .render(item, true, 'cart', index)
+  );
+
+  const cartElement = cartView.render(cartCards);
+  cartView.updateTotalPrice(appState.cartItems.reduce((sum, item) => sum + item.price, 0));
   modalView.render(cartElement);
   modalView.open();
   appState.modalState = 'cart';

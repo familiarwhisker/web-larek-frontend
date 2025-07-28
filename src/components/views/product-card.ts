@@ -53,32 +53,22 @@ export class ProductCardView {
     });
   }
 
-  set id(value: string) {
-    this._id = value;
-  }
+  render(product: IProduct, isInCart: boolean, cardType: 'catalog' | 'preview' | 'cart' = 'catalog', index?: number): HTMLElement {
+    this._id = product.id; // Нужно для эмитов в конструкторе
+    this._isInCart = isInCart; // Нужно для эмита правильного события
 
-  get id(): string {
-    return this._id;
-  }
-
-  render(product: IProduct, isInCart: boolean): HTMLElement {
-    this.id = product.id;
-    this._isInCart = isInCart; // Сохраняем состояние товара в корзине
-    this.title.textContent = product.title;
-    this.price.textContent = this.formatPrice(product.price);
-    this.category.textContent = product.category;
-    this.image.src = CDN_URL + product.image;
-
-    // Устанавливаем правильный класс для категории
-    this.setCategoryClass(product.category);
-
-    // Устанавливаем описание, если элемент существует
-    if (this.description) {
-      this.description.textContent = product.description;
-    }
-
-    if (this.addButton) {
-      this.updateButtonState(product, isInCart);
+    // Вызываем соответствующий метод рендера в зависимости от типа карточки
+    switch (cardType) {
+      case 'cart':
+        this.renderCartCard(product, index);
+        break;
+      case 'preview':
+        this.renderPreviewCard(product, isInCart);
+        break;
+      case 'catalog':
+      default:
+        this.renderCatalogCard(product, isInCart);
+        break;
     }
 
     return this.element;
@@ -90,6 +80,67 @@ export class ProductCardView {
 
   canBeAddedToCart(product: IProduct): boolean {
     return product.price > 0;
+  }
+
+  private renderCatalogCard(product: IProduct, isInCart: boolean): void {
+    if (this.title) this.title.textContent = product.title;
+    if (this.price) this.price.textContent = this.formatPrice(product.price);
+
+    if (this.category && product.category) {
+      this.category.textContent = product.category;
+      this.setCategoryClass(product.category);
+    }
+
+    if (this.image && product.image) {
+      this.image.src = CDN_URL + product.image;
+    }
+  }
+
+  private renderPreviewCard(product: IProduct, isInCart: boolean): void {
+    // Очищаем все поля перед установкой новых значений
+    if (this.title) {
+      this.title.textContent = '';
+      this.title.textContent = product.title;
+    }
+
+    if (this.price) {
+      this.price.textContent = '';
+      this.price.textContent = this.formatPrice(product.price);
+    }
+
+    if (this.category && product.category) {
+      this.category.textContent = '';
+      this.category.textContent = product.category;
+      this.setCategoryClass(product.category);
+    }
+
+    if (this.image && product.image) {
+      this.image.src = CDN_URL + product.image;
+    }
+
+    if (this.description) {
+      this.description.textContent = '';
+      if (product.description) {
+        this.description.textContent = product.description;
+      }
+    }
+
+    if (this.addButton) {
+      this.updateButtonState(product, isInCart);
+    }
+  }
+
+  private renderCartCard(product: IProduct, index?: number): void {
+    if (this.title) this.title.textContent = product.title;
+    if (this.price) this.price.textContent = this.formatPrice(product.price);
+
+    // Устанавливаем индекс для карточек корзины
+    if (index !== undefined) {
+      const indexElement = this.element.querySelector('.basket__item-index');
+      if (indexElement) {
+        indexElement.textContent = (index + 1).toString();
+      }
+    }
   }
 
   private updateButtonState(product: IProduct, isInCart: boolean): void {

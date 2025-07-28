@@ -1,5 +1,6 @@
 import { IProduct } from './product';
 import { IOrder } from './order';
+import { PaymentFormData, ContactsFormData, ValidationResult } from './validation';
 
 export interface IEvent {
   '*': undefined;
@@ -22,6 +23,10 @@ export interface IEvent {
   'order:set_contacts': { email: string; phone: string };
   'order:set_payment_method': { method: 'online' | 'cash' };
   'order:submit_request': IOrder;
+  'order:validate_payment_form': PaymentFormData;
+  'order:validate_contacts_form': ContactsFormData;
+  'order:payment_validation_result': ValidationResult;
+  'order:contacts_validation_result': ValidationResult;
 
   'modal:close': undefined;
 }

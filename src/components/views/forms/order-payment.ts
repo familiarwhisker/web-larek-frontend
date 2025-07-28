@@ -1,48 +1,98 @@
 import { FormView } from './form';
+import { ValidationResult } from '../../../types/validation';
+import { EventEmitter } from '../../base/event-emitter';
 
 export class OrderPaymentView extends FormView {
-  bindEvents(): void {
-    const cardBtn = this.element.querySelector('[name="card"]')!;
-    const cashBtn = this.element.querySelector('[name="cash"]')!;
-    const addressInput = this.element.querySelector<HTMLInputElement>('input[name="address"]')!;
-    const submitBtn = this.element.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  private cardBtn: HTMLElement;
+  private cashBtn: HTMLElement;
+  private addressInput: HTMLInputElement;
+  private submitBtn: HTMLButtonElement;
+  private selectedMethod: 'online' | 'cash' | null = null;
 
-    let selectedMethod: 'online' | 'cash' | null = null;
+  constructor(protected template: HTMLTemplateElement, emitter: EventEmitter) {
+    super(template, emitter);
 
-    const validate = () => {
-      if (selectedMethod && addressInput.value.trim()) {
-        submitBtn.disabled = false;
-      } else {
-        submitBtn.disabled = true;
-      }
-    };
+    // Сначала инициализируем element
+    this.element = this.template.content.firstElementChild!.cloneNode(true) as HTMLFormElement;
 
-    cardBtn.addEventListener('click', () => {
-      selectedMethod = 'online';
-      cardBtn.classList.add('button_alt-active');
-      cashBtn.classList.remove('button_alt-active');
+    this.cardBtn = this.element.querySelector('[name="card"]')!;
+    this.cashBtn = this.element.querySelector('[name="cash"]')!;
+    this.addressInput = this.element.querySelector<HTMLInputElement>('input[name="address"]')!;
+    this.submitBtn = this.element.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+
+    this.cardBtn.addEventListener('click', () => {
+      this.selectedMethod = 'online';
+      this.updatePaymentButtons();
       this.emitter.emit('order:set_payment_method', { method: 'online' });
-      validate();
+      this.validateForm();
     });
 
-    cashBtn.addEventListener('click', () => {
-      selectedMethod = 'cash';
-      cashBtn.classList.add('button_alt-active');
-      cardBtn.classList.remove('button_alt-active');
+    this.cashBtn.addEventListener('click', () => {
+      this.selectedMethod = 'cash';
+      this.updatePaymentButtons();
       this.emitter.emit('order:set_payment_method', { method: 'cash' });
-      validate();
+      this.validateForm();
     });
 
-    addressInput.addEventListener('input', () => {
-      if (addressInput.value.trim()) {
-        this.emitter.emit('order:set_address', { value: addressInput.value.trim() });
+    this.addressInput.addEventListener('input', () => {
+      if (this.addressInput.value.trim()) {
+        this.emitter.emit('order:set_address', { value: this.addressInput.value.trim() });
       }
-      validate();
+      this.validateForm();
     });
 
     this.element.addEventListener('submit', (e) => {
       e.preventDefault();
       this.emitter.emit('order:open_contacts_form');
     });
+  }
+
+  render(): HTMLElement {
+    // Очищаем форму при каждом рендере
+    this.clear();
+    this.selectedMethod = null;
+    this.updatePaymentButtons();
+    return this.element;
+  }
+
+  private updatePaymentButtons(): void {
+    // Сбрасываем активное состояние всех кнопок
+    this.cardBtn.classList.remove('button_alt-active');
+    this.cashBtn.classList.remove('button_alt-active');
+
+    // Устанавливаем активное состояние только для выбранной кнопки
+    if (this.selectedMethod === 'online') {
+      this.cardBtn.classList.add('button_alt-active');
+    } else if (this.selectedMethod === 'cash') {
+      this.cashBtn.classList.add('button_alt-active');
+    }
+  }
+
+  private validateForm(): void {
+    const formData = {
+      paymentMethod: this.selectedMethod,
+      address: this.addressInput.value
+    };
+
+    this.emitter.emit('order:validate_payment_form', formData);
+  }
+
+  updateValidationResult(result: ValidationResult): void {
+    // Обновляем состояние кнопки сабмита
+    this.submitBtn.disabled = result.submitButtonDisabled;
+
+    // Обновляем стили кнопки в зависимости от состояния
+    if (result.submitButtonDisabled) {
+      this.submitBtn.classList.add('button_disabled');
+    } else {
+      this.submitBtn.classList.remove('button_disabled');
+    }
+
+    // Показываем ошибки, если есть
+    if (result.errors.length > 0) {
+      this.showError(result.errors.join(', '));
+    } else {
+      this.showError('');
+    }
   }
 }

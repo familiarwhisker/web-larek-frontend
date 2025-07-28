@@ -43,6 +43,8 @@ export class ModalView {
   }
 
   render(content: HTMLElement): void {
-    this.content.replaceChildren(content);
+    // Полностью очищаем контент перед добавлением нового
+    this.content.innerHTML = '';
+    this.content.appendChild(content);
   }
 }
