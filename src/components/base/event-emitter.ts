@@ -1,4 +1,4 @@
-import { AppEventMap } from '../../types/events';
+import { IEvent } from '../../types/event';
 
 // Хорошая практика даже простые типы выносить в алиасы
 // Зато когда захотите поменять это достаточно сделать в одном месте
@@ -6,9 +6,9 @@ type EventName = string | RegExp;
 type Subscriber = Function;
 
 export interface IEvents {
-  on<K extends keyof AppEventMap>(event: K, callback: (data: AppEventMap[K]) => void): void;
-  emit<K extends keyof AppEventMap>(event: K, data?: AppEventMap[K]): void;
-  trigger<K extends keyof AppEventMap>(event: K, context?: Partial<AppEventMap[K]>): (data: AppEventMap[K]) => void;
+  on<K extends keyof IEvent>(event: K, callback: (data: IEvent[K]) => void): void;
+  emit<K extends keyof IEvent>(event: K, data?: IEvent[K]): void;
+  trigger<K extends keyof IEvent>(event: K, context?: Partial<IEvent[K]>): (data: IEvent[K]) => void;
 }
 
 /**
@@ -26,7 +26,7 @@ export class EventEmitter implements IEvents {
   /**
    * Установить обработчик на событие
    */
-  on<K extends keyof AppEventMap>(eventName: K, callback: (event: AppEventMap[K]) => void) {
+  on<K extends keyof IEvent>(eventName: K, callback: (event: IEvent[K]) => void) {
     if (!this._events.has(eventName)) {
       this._events.set(eventName, new Set<Subscriber>());
     }
@@ -48,14 +48,20 @@ export class EventEmitter implements IEvents {
   /**
    * Инициировать событие с данными
    */
-  emit<K extends keyof AppEventMap>(eventName: K, data?: AppEventMap[K]) {
+  emit<K extends keyof IEvent>(eventName: K, data?: IEvent[K]) {
     this._events.forEach((subscribers, name) => {
-      if (name === '*') subscribers.forEach(callback => callback({
-        eventName,
-        data
-      }));
+      if (name === '*') {
+        subscribers.forEach(callback => {
+          callback({
+            eventName,
+            data
+          });
+        });
+      }
       if (name instanceof RegExp && name.test(eventName) || name === eventName) {
-        subscribers.forEach(callback => callback(data));
+        subscribers.forEach(callback => {
+          callback(data);
+        });
       }
     });
   }
@@ -63,7 +69,7 @@ export class EventEmitter implements IEvents {
   /**
    * Слушать все события
    */
-  onAll<K extends keyof AppEventMap>(eventName: K, callback: (event: AppEventMap[K]) => void) {
+  onAll<K extends keyof IEvent>(eventName: K, callback: (event: IEvent[K]) => void) {
     this.on("*", callback);
   }
 
@@ -77,11 +83,11 @@ export class EventEmitter implements IEvents {
   /**
    * Сделать коллбек триггер, генерирующий событие при вызове
    */
-  trigger<K extends keyof AppEventMap>(
+  trigger<K extends keyof IEvent>(
     eventName: K,
-    context?: Partial<AppEventMap[K]>
-  ): (data: AppEventMap[K]) => void {
-    return (data: AppEventMap[K]) => {
+    context?: Partial<IEvent[K]>
+  ): (data: IEvent[K]) => void {
+    return (data: IEvent[K]) => {
       this.emit(eventName, data);
     };
   }

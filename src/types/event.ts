@@ -1,33 +1,27 @@
 import { IProduct } from './product';
-import { IOrderData } from './order';
-import { ICartItem } from './cart';
+import { IOrder } from './order';
 
-export interface AppEventMap {
+export interface IEvent {
   '*': undefined;
 
-  // Product
+  'products:loaded': undefined;
+  'products:loading_error': Error;
+
   'product:add_to_cart': string;
   'product:remove_from_cart': string;
   'product:select': string;
   'product:show_preview': IProduct;
 
-  // Cart
   'cart:open_modal': undefined;
   'cart:render_counter': number;
-  'cart:render_items': ICartItem[];
+  'cart:render_items': IProduct[];
 
-  // Order
   'order:open_contacts_form': undefined;
   'order:open_payment_form': undefined;
   'order:set_address': { value: string };
   'order:set_contacts': { email: string; phone: string };
   'order:set_payment_method': { method: 'online' | 'cash' };
-  'order:submit_request': IOrderData;
+  'order:submit_request': IOrder;
 
-  // Catalog
-  'catalog:error': Error;
-  'catalog:loaded': IProduct[];
-
-  // Modal
   'modal:close': undefined;
 }

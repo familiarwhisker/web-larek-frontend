@@ -1,24 +1,28 @@
-import { ICartItem } from '../../types';
+import { IProduct } from '../../types';
 import { EventEmitter } from '../base/event-emitter';
 
 export class CartView {
-  constructor(private container: HTMLElement, private emitter: EventEmitter) {}
+  private emitter: EventEmitter;
 
-  render(data: ICartItem[]): HTMLElement {
+  constructor(private container: HTMLElement, emitter: EventEmitter) {
+    this.emitter = emitter;
+  }
+
+  render(data: IProduct[]): HTMLElement {
     const template = document.querySelector('#basket') as HTMLTemplateElement;
 
     if (!template) {
-      console.error('Basket template not found!');
+      console.error('Cart template not found!');
       return document.createElement('div');
     }
 
-    const basketFragment = template.content.cloneNode(true) as HTMLElement;
+    const cartFragment = template.content.cloneNode(true) as HTMLElement;
 
-    const list = basketFragment.querySelector('.basket__list') as HTMLElement;
+    const list = cartFragment.querySelector('.basket__list') as HTMLElement;
     const itemTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
 
     if (!itemTemplate) {
-      console.error('Card basket template not found!');
+      console.error('Cart item template not found!');
       return document.createElement('div');
     }
 
@@ -32,22 +36,22 @@ export class CartView {
       const indexEl = itemNode.querySelector('.basket__item-index');
       const deleteBtn = itemNode.querySelector('.basket__item-delete');
 
-      if (title) title.textContent = item.product.title;
-      if (price) price.textContent = `${item.product.price} синапсов`;
+      if (title) title.textContent = item.title;
+      if (price) price.textContent = `${item.price} синапсов`;
       if (indexEl) indexEl.textContent = (index + 1).toString();
 
       deleteBtn?.addEventListener('click', () => {
-        this.emitter.emit('product:remove_from_cart', item.product.id);
+        this.emitter.emit('product:remove_from_cart', item.id);
       });
 
       list.appendChild(itemNode);
     });
 
-    const priceElement = basketFragment.querySelector('.basket__price');
-    const total = data.reduce((sum, item) => sum + item.product.price, 0);
+    const priceElement = cartFragment.querySelector('.basket__price');
+    const total = data.reduce((sum, item) => sum + item.price, 0);
     if (priceElement) priceElement.textContent = `${total} синапсов`;
 
-    const orderButton = basketFragment.querySelector('[data-order]');
+    const orderButton = cartFragment.querySelector('[data-order]');
     orderButton?.addEventListener('click', () => {
       this.emitter.emit('order:open_payment_form');
     });
@@ -63,7 +67,7 @@ export class CartView {
       }
     }
 
-    return basketFragment;
+    return cartFragment;
   }
 
   clear(): void {

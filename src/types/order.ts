@@ -1,8 +1,8 @@
-export interface IOrderData {
+export interface IOrder {
   payment: 'online' | 'cash';
   address: string;
   email: string;
   phone: string;
   total: number;
-  items: string[]; // массив ID товаров
+  items: string[];
 }

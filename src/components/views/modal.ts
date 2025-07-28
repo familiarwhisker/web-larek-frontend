@@ -3,24 +3,24 @@ import { EventEmitter } from '../base/event-emitter';
 export class ModalView {
   private content: HTMLElement;
   private closeButton: HTMLElement;
+  private emitter: EventEmitter;
 
-  constructor(private container: HTMLElement, private emitter: EventEmitter) {
+  constructor(private container: HTMLElement, emitter: EventEmitter) {
+    this.emitter = emitter;
+
     this.content = container.querySelector('.modal__content')!;
     this.closeButton = container.querySelector('.modal__close')!;
 
-    // Закрытие по кнопке
     this.closeButton.addEventListener('click', () => {
       this.emitter.emit('modal:close');
     });
 
-    // Закрытие по клику за пределами модалки
     this.container.addEventListener('click', (e) => {
       if (e.target === this.container) {
         this.emitter.emit('modal:close');
       }
     });
 
-    // Закрытие по клавише Esc
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.container.classList.contains('modal_active')) {
         this.emitter.emit('modal:close');

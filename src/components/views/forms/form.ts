@@ -2,11 +2,10 @@ import { EventEmitter } from '../../base/event-emitter';
 
 export abstract class FormView<T = unknown> {
   protected element: HTMLFormElement;
+  protected emitter: EventEmitter;
 
-  constructor(
-    protected template: HTMLTemplateElement,
-    protected emitter: EventEmitter
-  ) {
+  constructor(protected template: HTMLTemplateElement, emitter: EventEmitter) {
+    this.emitter = emitter;
   }
 
   abstract bindEvents(data?: T): void;

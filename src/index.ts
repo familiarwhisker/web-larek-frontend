@@ -12,27 +12,44 @@ import { OrderPaymentView } from './components/views/forms/order-payment';
 import { OrderContactsView } from './components/views/forms/order-contacts';
 import { SuccessView } from './components/views/success';
 import { AppState } from './components/models/app-state';
-import { OrderModel } from './components/models/order-model';
+import { OrderModel } from './components/models/order';
 
 const emitter = new EventEmitter();
 const apiClient = new Api(API_URL);
 
-const appState = new AppState(emitter, apiClient);
-const orderModel = new OrderModel(emitter);
+const appState = new AppState(emitter);
+const orderModel = new OrderModel();
 
 const mainView = new MainView(emitter);
 
+const modalView = new ModalView(document.querySelector('#modal-container')!, emitter);
+const cartView = new CartView(document.querySelector('#cart')!, emitter);
+const orderPaymentView = new OrderPaymentView(document.querySelector('#order') as HTMLTemplateElement, emitter);
+const orderContactsView = new OrderContactsView(document.querySelector('#contacts') as HTMLTemplateElement, emitter);
+
+emitter.on('products:loaded', () => {
+  const cards = appState.products.map(
+    p => new ProductCardView(document.querySelector('#card-catalog') as HTMLTemplateElement, emitter)
+      .render(p, appState.isProductInCart(p.id))
+  );
+  mainView.render(cards);
+});
+
+emitter.on('products:loading_error', (error: Error) => {
+  console.error('Product loading error:', error);
+});
+
 emitter.on('product:select', (productId: string) => {
-  appState.selectProduct(productId);
+  appState.selectedProductId = productId;
 });
 
 emitter.on('product:show_preview', (product) => {
-  const previewTemplate = document.querySelector('#card-preview') as HTMLTemplateElement;
-  const inCart = appState.isProductInCart(product.id);
-  const modalCard = new ProductCardView(product, previewTemplate, emitter, inCart).render();
-
-  modalView.render(modalCard);
+  modalView.render(
+    new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
+      .render(product, appState.isProductInCart(product.id))
+  );
   modalView.open();
+  appState.modalState = 'product_preview';
 });
 
 emitter.on('modal:close', () => {
@@ -41,17 +58,27 @@ emitter.on('modal:close', () => {
 
 emitter.on('product:add_to_cart', (productId: string) => {
   appState.addProductToCart(productId);
-  appState.selectProduct(productId); // обновить попап
+  appState.selectedProductId = productId;
 });
 
 emitter.on('product:remove_from_cart', (productId: string) => {
   appState.removeProductFromCart(productId);
 
-  // Если корзина открыта, перерисовываем её
   if (modalView.isOpen()) {
-    const items = appState.getCartItems();
-    const cartElement = cartView.render(items);
-    modalView.render(cartElement);
+    // Если в модальном окне отображается корзина, обновляем её
+    if (appState.isShowingCart()) {
+      modalView.render(cartView.render(appState.cartItems));
+    }
+    // Если в модальном окне отображается превью товара, обновляем его
+    else if (appState.isShowingProductPreview()) {
+      const product = appState.products.find(p => p.id === productId);
+      if (product) {
+        modalView.render(
+          new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
+            .render(product, appState.isProductInCart(product.id))
+        );
+      }
+    }
   }
 });
 
@@ -60,19 +87,17 @@ emitter.on('cart:render_counter', (count: number) => {
 });
 
 emitter.on('order:open_payment_form', () => {
-  // Устанавливаем товары из корзины в заказ
-  const cartItems = appState.getCartItems();
-  orderModel.setItems(cartItems);
+  orderModel.setItems(appState.cartItems);
 
-  const paymentForm = orderPaymentView.render({}); // всегда пусто
-  modalView.render(paymentForm);
+  modalView.render(orderPaymentView.render({}));
   modalView.open();
+  appState.modalState = 'payment';
 });
 
 emitter.on('order:open_contacts_form', () => {
-  const contactForm = orderContactsView.render({}); // всегда пусто
-  modalView.render(contactForm);
+  modalView.render(orderContactsView.render({}));
   modalView.open();
+  appState.modalState = 'contacts';
 });
 
 emitter.on('order:set_payment_method', (data: { method: 'online' | 'cash' }) => {
@@ -91,71 +116,25 @@ emitter.on('order:set_contacts', (data: { email: string; phone: string }) => {
 emitter.on('order:submit_request', () => {
   const order = orderModel.getOrder();
   apiClient.post('/order', order).then(() => {
-    // Очищаем корзину и заказ после успешного оформления
     appState.clearCart();
     orderModel.clear();
 
-    const successView = new SuccessView(emitter, order.total);
+    const successView = new SuccessView(order.total, emitter);
     const successMessage = successView.render();
     modalView.render(successMessage);
     modalView.open();
+    appState.modalState = 'success';
   }).catch((error) => {
     console.error('Ошибка при оформлении заказа:', error);
   });
 });
 
 emitter.on('cart:open_modal', () => {
-  const items = appState.getCartItems();
+  const items = appState.cartItems;
   const cartElement = cartView.render(items);
   modalView.render(cartElement);
   modalView.open();
+  appState.modalState = 'cart';
 });
 
-emitter.on('catalog:loaded', (products) => {
-  const catalogTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
-  const cards = products.map(p => {
-    const inCart = appState.isProductInCart(p.id);
-    return new ProductCardView(p, catalogTemplate, emitter, inCart).render();
-  });
-  mainView.render(cards);
-});
-
-emitter.on('catalog:error', (error) => {
-  console.error('Product loading error:', error);
-});
-
-const modalView = new ModalView(
-  document.querySelector('#modal-container')!,
-  emitter
-);
-const cartView = new CartView(
-  document.querySelector('#cart')!,
-  emitter
-);
-
-const orderPaymentView = new OrderPaymentView(
-  document.querySelector('#order') as HTMLTemplateElement,
-  emitter
-);
-
-const orderContactsView = new OrderContactsView(
-  document.querySelector('#contacts') as HTMLTemplateElement,
-  emitter
-);
-
-
-// СТАРОЕ Удаление и добавление товаров в корзину
-
-// function updateCartUI() {
-//   const items = cartModel.getItems();
-//   mainView.updateCounter(items.length);
-
-//   const basketTemplate = document.querySelector('#card-basket') as HTMLTemplateElement;
-//   const cards = items.map(i => new ProductCardView(i.product, basketTemplate, emitter).render());
-
-//   cartView.render(cards);
-// }
-
-// emitter.on<'cart:render_items'>('cart:render_items', () => {
-//   updateCartUI();
-// });
+appState.loadProducts();
