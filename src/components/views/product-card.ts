@@ -1,7 +1,6 @@
 import { IProduct } from '../../types';
 import { EventEmitter } from '../base/event-emitter';
 import { CDN_URL } from '../../utils/constants';
-import { IButton } from '../../types';
 
 export class ProductCardView {
   private template: HTMLTemplateElement;
@@ -14,10 +13,11 @@ export class ProductCardView {
   private addButton: HTMLButtonElement | null = null;
   private deleteButton: HTMLButtonElement | null = null;
   private emitter: EventEmitter;
+  private action?: (event: MouseEvent) => void;
 
   private _id: string = '';
 
-  constructor(template: HTMLTemplateElement, emitter: EventEmitter, buttonConfig?: IButton) {
+  constructor(template: HTMLTemplateElement, emitter: EventEmitter, action?: (event: MouseEvent) => void) {
     this.emitter = emitter;
     this.template = template;
     this.element = this.template.content.firstElementChild!.cloneNode(true) as HTMLElement;
@@ -28,13 +28,14 @@ export class ProductCardView {
     this.description = this.element.querySelector('.card__text');
     this.deleteButton = this.element.querySelector('.basket__item-delete');
     this.addButton = this.element.querySelector('.card__button');
+    this.action = action;
 
     this.element.addEventListener('click', () => {
       this.emitter.emit('product:select', this._id);
     });
 
-    if (buttonConfig && buttonConfig.action) {
-      this.addButton?.addEventListener('click', buttonConfig.action);
+    if (this.action) {
+      this.addButton?.addEventListener('click', this.action);
     }
 
     this.deleteButton?.addEventListener('click', (e) => {
@@ -43,18 +44,18 @@ export class ProductCardView {
     });
   }
 
-  render(product: IProduct, isInCart: boolean, cardType: 'catalog' | 'preview' | 'cart' = 'catalog', buttonConfig?: IButton, index?: number): HTMLElement {
+  render(product: IProduct, cardType: 'catalog' | 'preview' | 'cart' = 'catalog', buttonState?: 'remove' | 'buy' | 'buy_disabled', index?: number): HTMLElement {
     this._id = product.id;
     switch (cardType) {
       case 'cart':
         this.renderCartCard(product, index);
         break;
       case 'preview':
-        this.renderPreviewCard(product, buttonConfig);
+        this.renderPreviewCard(product, buttonState);
         break;
       case 'catalog':
       default:
-        this.renderCatalogCard(product, isInCart);
+        this.renderCatalogCard(product, buttonState);
         break;
     }
     return this.element;
@@ -73,7 +74,7 @@ export class ProductCardView {
     if (this.price) this.price.textContent = this.formatPrice(product.price);
   }
 
-  private renderCatalogCard(product: IProduct, isInCart: boolean): void {
+  private renderCatalogCard(product: IProduct, buttonState?: 'remove' | 'buy' | 'buy_disabled'): void {
     this.setTitleAndPrice(product);
     if (this.category && product.category) {
       this.category.textContent = product.category;
@@ -82,9 +83,18 @@ export class ProductCardView {
     if (this.image && product.image) {
       this.image.src = CDN_URL + product.image;
     }
+    if (this.addButton && buttonState) {
+      if (buttonState === 'remove') {
+        this.renderRemoveFromCartButton();
+      } else if (buttonState === 'buy') {
+        this.renderAddToCartButton();
+      } else if (buttonState === 'buy_disabled') {
+        this.renderDisabledBuyButton();
+      }
+    }
   }
 
-  private renderPreviewCard(product: IProduct, buttonConfig?: IButton): void {
+  private renderPreviewCard(product: IProduct, buttonState?: 'remove' | 'buy' | 'buy_disabled'): void {
     this.setTitleAndPrice(product);
     if (this.category && product.category) {
       this.category.textContent = '';
@@ -100,12 +110,12 @@ export class ProductCardView {
         this.description.textContent = product.description;
       }
     }
-    if (this.addButton && buttonConfig) {
-      if (buttonConfig.state === 'remove') {
+    if (this.addButton && buttonState) {
+      if (buttonState === 'remove') {
         this.renderRemoveFromCartButton();
-      } else if (buttonConfig.state === 'buy') {
+      } else if (buttonState === 'buy') {
         this.renderAddToCartButton();
-      } else if (buttonConfig.state === 'buy_disabled') {
+      } else if (buttonState === 'buy_disabled') {
         this.renderDisabledBuyButton();
       }
     }

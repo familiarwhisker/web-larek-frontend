@@ -30,7 +30,7 @@ const orderContactsView = new OrderContactsView(document.querySelector('#contact
 emitter.on('products:loaded', () => {
   const cards = appState.products.map(
     p => new ProductCardView(document.querySelector('#card-catalog') as HTMLTemplateElement, emitter)
-      .render(p, appState.isProductInCart(p.id), 'catalog')
+      .render(p, 'catalog', undefined, undefined)
   );
   mainView.render(cards);
 });
@@ -52,20 +52,19 @@ emitter.on('product:show_preview', (product) => {
   } else {
     state = 'buy_disabled';
   }
-  const buttonConfig = {
-    state,
-    action: (e: MouseEvent) => {
-      e.stopPropagation();
-      if (state === 'remove') {
-        emitter.emit('product:remove_from_cart', product.id);
-      } else if (state === 'buy') {
-        emitter.emit('product:add_to_cart', product.id);
-      }
+
+  const action = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (state === 'remove') {
+      emitter.emit('product:remove_from_cart', product.id);
+    } else if (state === 'buy') {
+      emitter.emit('product:add_to_cart', product.id);
     }
   };
+
   modalView.render(
-    new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter, buttonConfig)
-      .render(product, appState.isProductInCart(product.id), 'preview', buttonConfig)
+    new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter, action)
+      .render(product, 'preview', state)
   );
   modalView.open();
   appState.modalState = 'product_preview';
@@ -143,7 +142,7 @@ emitter.on('cart:open_modal', () => {
   orderModel.setItems(appState.cartItems);
   const cartCards = appState.cartItems.map(
     (item, index) => new ProductCardView(document.querySelector('#card-basket') as HTMLTemplateElement, emitter)
-      .render(item, true, 'cart', undefined, index)
+      .render(item, 'cart', undefined, index)
   );
 
   const cartElement = cartView.render(cartCards);

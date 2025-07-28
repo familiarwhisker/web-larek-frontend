@@ -1,4 +1,3 @@
 export * from './product';
 export * from './order';
 export * from './event';
-export * from './button';
