@@ -328,7 +328,6 @@ constructor(emitter: EventEmitter)
 - `getCartItemsCount(): number` — возвращает количество товаров в корзине
 - `clearCart(): void` — очищает корзину и обновляет счетчик
 - `isProductInCart(productId: string): boolean` — проверяет наличие товара в корзине
-- `getCartTotalPrice(): number` — рассчитывает и возвращает общую стоимость товаров в корзине
 
 **Управление выбором товара:**
 - `set selectedProductId(value: string)` — устанавливает выбранный товар и эмитит событие показа превью
@@ -415,16 +414,22 @@ constructor(private emitter: EventEmitter)
 
 **Конструктор:**
 ```ts
-constructor(product: IProduct, template: HTMLTemplateElement, emitter: EventEmitter, inCart?: boolean)
+constructor(template: HTMLTemplateElement, emitter: EventEmitter, action?: (event: MouseEvent) => void)
 ```
+- Параметр `action` — необязательный обработчик клика по кнопке "В корзину"/"Удалить из корзины" для карточки-превью. Передаётся из index.ts, где доступно состояние корзины.
 
 **Методы:**
-- `render(): HTMLElement` — возвращает карточку
+- `render(product: IProduct, isInCart: boolean, cardType: 'catalog' | 'preview' | 'cart' = 'catalog', index?: number): HTMLElement` — рендер карточки
 
 **Эмитируемые события:**
 - `'product:select'` — клик по карточке (открыть превью)
 - `'product:add_to_cart'` — добавить товар в корзину
 - `'product:remove_from_cart'` — удалить товар из корзины
+
+**Особенности:**
+- Не хранит состояние "в корзине" — этот признак определяется только в модели
+- Для карточки-превью обработчик кнопки передаётся через параметр конструктора
+- Для других шаблонов обработчики не меняются
 
 ---
 

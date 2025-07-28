@@ -3,7 +3,11 @@ import { EventEmitter } from '../base/event-emitter';
 import { PaymentFormData, ContactsFormData, ValidationResult } from '../../types/validation';
 
 export class OrderModel {
-  private order: Partial<IOrder> = {};
+  private items: IProduct[] = [];
+  private paymentMethod: 'online' | 'cash' | null = null;
+  private address: string | null = null;
+  private email: string | null = null;
+  private phone: string | null = null;
   private emitter: EventEmitter;
 
   constructor(emitter: EventEmitter) {
@@ -11,21 +15,24 @@ export class OrderModel {
   }
 
   setPaymentMethod(method: 'online' | 'cash') {
-    this.order.payment = method;
+    this.paymentMethod = method;
   }
 
   setAddress(address: string) {
-    this.order.address = address;
+    this.address = address;
   }
 
   setContacts(email: string, phone: string) {
-    this.order.email = email;
-    this.order.phone = phone;
+    this.email = email;
+    this.phone = phone;
   }
 
   setItems(items: IProduct[]) {
-    this.order.items = items.map(item => item.id);
-    this.order.total = items.reduce((sum, item) => sum + item.price, 0);
+    this.items = items;
+  }
+
+  calculateTotalPrice() {
+    return this.items.reduce((sum, item) => sum + item.price, 0);
   }
 
   validatePaymentForm(data: PaymentFormData): ValidationResult {
@@ -83,21 +90,30 @@ export class OrderModel {
   }
 
   clear() {
-    this.order = {};
+    this.items = [];
+    this.paymentMethod = null;
+    this.address = null;
+    this.email = null;
+    this.phone = null;
   }
 
   clearFormData() {
     // Очищаем только данные форм, оставляя товары и сумму
-    this.order.payment = undefined;
-    this.order.address = undefined;
-    this.order.email = undefined;
-    this.order.phone = undefined;
+    this.paymentMethod = null;
+    this.address = null;
+    this.email = null;
+    this.phone = null;
   }
 
   getOrder(): IOrder {
-    const { payment, address, email, phone, total, items } = this.order;
+    const payment = this.paymentMethod;
+    const address = this.address;
+    const email = this.email;
+    const phone = this.phone;
+    const items = this.items.map(item => item.id);
+    const total = this.calculateTotalPrice();
 
-    if (!payment || !address || !email || !phone || !total || !items) {
+    if (!payment || !address || !email || !phone || total == null || !items) {
       throw new Error('Данные заказа неполные');
     }
 

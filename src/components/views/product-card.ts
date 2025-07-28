@@ -1,6 +1,7 @@
 import { IProduct } from '../../types';
 import { EventEmitter } from '../base/event-emitter';
 import { CDN_URL } from '../../utils/constants';
+import { IButton } from '../../types';
 
 export class ProductCardView {
   private template: HTMLTemplateElement;
@@ -15,13 +16,10 @@ export class ProductCardView {
   private emitter: EventEmitter;
 
   private _id: string = '';
-  private _isInCart: boolean = false;
 
-  constructor(template: HTMLTemplateElement, emitter: EventEmitter) {
+  constructor(template: HTMLTemplateElement, emitter: EventEmitter, buttonConfig?: IButton) {
     this.emitter = emitter;
-
     this.template = template;
-
     this.element = this.template.content.firstElementChild!.cloneNode(true) as HTMLElement;
     this.title = this.element.querySelector('.card__title') as HTMLTitleElement;
     this.price = this.element.querySelector('.card__price') as HTMLParagraphElement;
@@ -35,17 +33,9 @@ export class ProductCardView {
       this.emitter.emit('product:select', this._id);
     });
 
-    // Обработчик для кнопки добавления/удаления из корзины
-    this.addButton?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // Определяем, какое событие эмитить, в зависимости от состояния товара
-      // Это будет обновляться в методе render
-      if (this._isInCart) {
-        this.emitter.emit('product:remove_from_cart', this._id);
-      } else {
-        this.emitter.emit('product:add_to_cart', this._id);
-      }
-    });
+    if (buttonConfig && buttonConfig.action) {
+      this.addButton?.addEventListener('click', buttonConfig.action);
+    }
 
     this.deleteButton?.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -53,24 +43,20 @@ export class ProductCardView {
     });
   }
 
-  render(product: IProduct, isInCart: boolean, cardType: 'catalog' | 'preview' | 'cart' = 'catalog', index?: number): HTMLElement {
-    this._id = product.id; // Нужно для эмитов в конструкторе
-    this._isInCart = isInCart; // Нужно для эмита правильного события
-
-    // Вызываем соответствующий метод рендера в зависимости от типа карточки
+  render(product: IProduct, isInCart: boolean, cardType: 'catalog' | 'preview' | 'cart' = 'catalog', buttonConfig?: IButton, index?: number): HTMLElement {
+    this._id = product.id;
     switch (cardType) {
       case 'cart':
         this.renderCartCard(product, index);
         break;
       case 'preview':
-        this.renderPreviewCard(product, isInCart);
+        this.renderPreviewCard(product, buttonConfig);
         break;
       case 'catalog':
       default:
         this.renderCatalogCard(product, isInCart);
         break;
     }
-
     return this.element;
   }
 
@@ -82,59 +68,51 @@ export class ProductCardView {
     return product.price > 0;
   }
 
-  private renderCatalogCard(product: IProduct, isInCart: boolean): void {
+  private setTitleAndPrice(product: IProduct): void {
     if (this.title) this.title.textContent = product.title;
     if (this.price) this.price.textContent = this.formatPrice(product.price);
+  }
 
+  private renderCatalogCard(product: IProduct, isInCart: boolean): void {
+    this.setTitleAndPrice(product);
     if (this.category && product.category) {
       this.category.textContent = product.category;
       this.setCategoryClass(product.category);
     }
-
     if (this.image && product.image) {
       this.image.src = CDN_URL + product.image;
     }
   }
 
-  private renderPreviewCard(product: IProduct, isInCart: boolean): void {
-    // Очищаем все поля перед установкой новых значений
-    if (this.title) {
-      this.title.textContent = '';
-      this.title.textContent = product.title;
-    }
-
-    if (this.price) {
-      this.price.textContent = '';
-      this.price.textContent = this.formatPrice(product.price);
-    }
-
+  private renderPreviewCard(product: IProduct, buttonConfig?: IButton): void {
+    this.setTitleAndPrice(product);
     if (this.category && product.category) {
       this.category.textContent = '';
       this.category.textContent = product.category;
       this.setCategoryClass(product.category);
     }
-
     if (this.image && product.image) {
       this.image.src = CDN_URL + product.image;
     }
-
     if (this.description) {
       this.description.textContent = '';
       if (product.description) {
         this.description.textContent = product.description;
       }
     }
-
-    if (this.addButton) {
-      this.updateButtonState(product, isInCart);
+    if (this.addButton && buttonConfig) {
+      if (buttonConfig.state === 'remove') {
+        this.renderRemoveFromCartButton();
+      } else if (buttonConfig.state === 'buy') {
+        this.renderAddToCartButton();
+      } else if (buttonConfig.state === 'buy_disabled') {
+        this.renderDisabledBuyButton();
+      }
     }
   }
 
   private renderCartCard(product: IProduct, index?: number): void {
-    if (this.title) this.title.textContent = product.title;
-    if (this.price) this.price.textContent = this.formatPrice(product.price);
-
-    // Устанавливаем индекс для карточек корзины
+    this.setTitleAndPrice(product);
     if (index !== undefined) {
       const indexElement = this.element.querySelector('.basket__item-index');
       if (indexElement) {
@@ -143,24 +121,16 @@ export class ProductCardView {
     }
   }
 
-  private updateButtonState(product: IProduct, isInCart: boolean): void {
-    if (isInCart) {
-      this.setRemoveFromCartButton();
-    } else {
-      this.setAddToCartButton(product);
-    }
-  }
-
-  private setAddToCartButton(product: IProduct): void {
-    if (this.canBeAddedToCart(product)) {
-      this.enableButton('В корзину');
-    } else {
-      this.disableButton('Недоступно');
-    }
-  }
-
-  private setRemoveFromCartButton(): void {
+  private renderRemoveFromCartButton(): void {
     this.enableButton('Удалить из корзины');
+  }
+
+  private renderDisabledBuyButton(): void {
+    this.disableButton('Недоступно');
+  }
+
+  private renderAddToCartButton(): void {
+    this.enableButton('В корзину');
   }
 
   private enableButton(text: string): void {

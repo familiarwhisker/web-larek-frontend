@@ -55,6 +55,13 @@ export class OrderPaymentView extends FormView {
     return this.element;
   }
 
+  private updateTotalPrice(price: number): void {
+    const totalPrice = this.element.querySelector('.order-payment__total-price');
+    if (totalPrice) {
+      totalPrice.textContent = price.toString();
+    }
+  }
+
   private updatePaymentButtons(): void {
     // Сбрасываем активное состояние всех кнопок
     this.cardBtn.classList.remove('button_alt-active');

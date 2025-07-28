@@ -43,6 +43,10 @@ export class AppState {
     return this._selectedProductId;
   }
 
+  get selectedProduct(): IProduct | null {
+    return this.products.find(p => p.id === this._selectedProductId) || null;
+  }
+
   set modalState(value: 'cart' | 'product_preview' | 'payment' | 'contacts' | 'success' | null) {
     this._modalState = value;
   }
@@ -82,7 +86,7 @@ export class AppState {
     this.emitter.emit('cart:render_counter', this.cartItems.length);
   }
 
-  removeProductFromCart(productId: string) {
+  removeProductFromCart(productId: string, modalWindowToUpdate: 'cart' | 'product_preview' | 'payment' | 'contacts' | 'success' | null) {
     const item = this.cartItems.find(i => i.id === productId);
     if (!item) {
       console.log('Товар не найден', productId);
@@ -92,14 +96,16 @@ export class AppState {
     this.cartItems = this.cartItems.filter(i => i.id !== productId);
 
     this.emitter.emit('cart:render_counter', this.cartItems.length);
+
+    if (modalWindowToUpdate === 'cart') {
+      this.emitter.emit('cart:open_modal');
+    } else if (modalWindowToUpdate === 'product_preview') {
+      this.emitter.emit('product:show_preview', this.selectedProduct!);
+    }
   }
 
   getCartItemsCount(): number {
     return this.cartItems.length;
-  }
-
-  getCartTotalPrice(): number {
-    return this.cartItems.reduce((sum, item) => sum + item.price, 0);
   }
 
   clearCart(): void {

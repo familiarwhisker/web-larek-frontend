@@ -44,9 +44,28 @@ emitter.on('product:select', (productId: string) => {
 });
 
 emitter.on('product:show_preview', (product) => {
+  let state: 'remove' | 'buy' | 'buy_disabled';
+  if (appState.isProductInCart(product.id)) {
+    state = 'remove';
+  } else if (product.price > 0) {
+    state = 'buy';
+  } else {
+    state = 'buy_disabled';
+  }
+  const buttonConfig = {
+    state,
+    action: (e: MouseEvent) => {
+      e.stopPropagation();
+      if (state === 'remove') {
+        emitter.emit('product:remove_from_cart', product.id);
+      } else if (state === 'buy') {
+        emitter.emit('product:add_to_cart', product.id);
+      }
+    }
+  };
   modalView.render(
-    new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
-      .render(product, appState.isProductInCart(product.id), 'preview')
+    new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter, buttonConfig)
+      .render(product, appState.isProductInCart(product.id), 'preview', buttonConfig)
   );
   modalView.open();
   appState.modalState = 'product_preview';
@@ -59,43 +78,6 @@ emitter.on('modal:close', () => {
 emitter.on('product:add_to_cart', (productId: string) => {
   appState.addProductToCart(productId);
   appState.selectedProductId = productId;
-
-  // Если в модальном окне отображается превью товара, обновляем его
-  if (modalView.isOpen() && appState.isShowingProductPreview()) {
-    const product = appState.products.find(p => p.id === productId);
-    if (product) {
-      modalView.render(
-        new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
-          .render(product, appState.isProductInCart(product.id), 'preview')
-      );
-    }
-  }
-});
-
-emitter.on('product:remove_from_cart', (productId: string) => {
-  appState.removeProductFromCart(productId);
-
-  if (modalView.isOpen()) {
-    // Если в модальном окне отображается корзина, обновляем её
-    if (appState.isShowingCart()) {
-      const cartCards = appState.cartItems.map(
-        (item, index) => new ProductCardView(document.querySelector('#card-basket') as HTMLTemplateElement, emitter)
-          .render(item, true, 'cart', index)
-      );
-      cartView.render(cartCards);
-      cartView.updateTotalPrice(appState.getCartTotalPrice());
-    }
-    // Если в модальном окне отображается превью товара, обновляем его
-    else if (appState.isShowingProductPreview()) {
-      const product = appState.products.find(p => p.id === productId);
-      if (product) {
-        modalView.render(
-          new ProductCardView(document.querySelector('#card-preview') as HTMLTemplateElement, emitter)
-            .render(product, appState.isProductInCart(product.id), 'preview')
-        );
-      }
-    }
-  }
 });
 
 emitter.on('cart:render_counter', (count: number) => {
@@ -103,8 +85,9 @@ emitter.on('cart:render_counter', (count: number) => {
 });
 
 emitter.on('order:open_payment_form', () => {
-  orderModel.setItems(appState.cartItems);
   orderModel.clearFormData();
+  orderModel.setItems(appState.cartItems);
+  const price = orderModel.calculateTotalPrice();
 
   modalView.render(orderPaymentView.render());
   modalView.open();
@@ -143,30 +126,35 @@ emitter.on('order:validate_contacts_form', (formData) => {
 emitter.on('order:submit_request', () => {
   const order = orderModel.getOrder();
   apiClient.post('/order', order).then(() => {
-    appState.clearCart();
-    orderModel.clear();
-
-    const successView = new SuccessView(order.total, emitter);
+    const successView = new SuccessView(orderModel.calculateTotalPrice(), emitter);
     const successMessage = successView.render();
+
     modalView.render(successMessage);
     modalView.open();
     appState.modalState = 'success';
+    appState.clearCart();
+    orderModel.clear();
   }).catch((error) => {
     console.error('Ошибка при оформлении заказа:', error);
   });
 });
 
 emitter.on('cart:open_modal', () => {
+  orderModel.setItems(appState.cartItems);
   const cartCards = appState.cartItems.map(
     (item, index) => new ProductCardView(document.querySelector('#card-basket') as HTMLTemplateElement, emitter)
-      .render(item, true, 'cart', index)
+      .render(item, true, 'cart', undefined, index)
   );
 
   const cartElement = cartView.render(cartCards);
-  cartView.updateTotalPrice(appState.getCartTotalPrice());
+  cartView.updateTotalPrice(orderModel.calculateTotalPrice());
   modalView.render(cartElement);
   modalView.open();
   appState.modalState = 'cart';
+});
+
+emitter.on('product:remove_from_cart', (productId: string) => {
+  appState.removeProductFromCart(productId, appState.modalState);
 });
 
 appState.loadProducts();
