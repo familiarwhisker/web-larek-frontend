@@ -1,668 +1,666 @@
-# Проектная работа "Веб-ларек"
+# Web Storefront Project
 
-Приложение построено на принципах MVP (Model-View-Presenter) архитектуры с использованием TypeScript и современного стека технологий.
+This application is built using the MVP (Model–View–Presenter) architecture with TypeScript and a modern frontend stack.
 
-## Основные возможности
+## Features
 
-- **Каталог товаров** - просмотр товаров с детальной информацией
-- **Корзина покупок** - добавление/удаление товаров, подсчет общей стоимости
-- **Оформление заказа** - двухэтапная форма с валидацией:
-  - Выбор способа оплаты (онлайн/при получении)
-  - Ввод адреса доставки
-  - Ввод контактных данных (email, телефон)
-- **Валидация форм** - проверка корректности введенных данных в реальном времени
-- **Модальные окна** - удобный интерфейс для просмотра товаров и оформления заказов
+- **Product Catalog** — browse products with detailed information  
+- **Shopping Cart** — add/remove items, automatic total calculation  
+- **Checkout Flow** — two-step form with validation:
+  - Select payment method (online / cash on delivery)
+  - Enter delivery address
+  - Provide contact details (email, phone)
+- **Form Validation** — real-time input validation  
+- **Modals** — clean UI for product previews and checkout  
 
-Tech stack: HTML, SCSS, TypeScript, Webpack
-
-## Технологии и инструменты
-
-- **TypeScript** - строгая типизация, современный JavaScript
-- **SCSS** - препроцессор CSS с использованием BEM методологии
-- **Webpack** - сборка проекта, обработка модулей
-- **HTML5** - семантическая разметка
-- **EventEmitter** - собственная реализация паттерна Observer для событийной архитектуры
-- **MVP архитектура** - четкое разделение ответственности между слоями
-
-### Ключевые файлы и папки
-
-- `src/index.ts` — точка входа, слой Presenter (MVP)
-- `src/pages/index.html` — основной HTML-шаблон
-- `src/components/base/` — инфраструктурные классы (API-клиент, EventEmitter)
-  - `api.ts` — API-клиент
-  - `event-emitter.ts` — событийный брокер
-- `src/components/models/` — слой моделей (AppState, OrderModel)
-  - `app-state.ts` — состояние приложения (каталог, корзина)
-  - `order.ts` — модель заказа с валидацией форм
-- `src/components/views/` — слой представлений (View)
-  - `main.ts`, `cart.ts`, `modal.ts`, `product-card.ts`, `success.ts` — основные View-компоненты
-  - `forms/` — формы заказа: `order-payment.ts`, `order-contacts.ts`, `form.ts`
-- `src/types/` — типы и интерфейсы
-  - `product.ts` — типы товаров
-  - `order.ts` — типы заказов
-  - `event.ts` — типы событий
-  - `validation.ts` — типы валидации форм
-- `src/scss/styles.scss` — основной файл стилей
-- `src/common.blocks/` — SCSS-блоки для компонентов (BEM)
-- `src/utils/` — вспомогательные функции и константы
-  - `constants.ts` — константы
-  - `utils.ts` — утилиты
+**Tech stack:** HTML, SCSS, TypeScript, Webpack
 
 ---
 
-## Установка и запуск
+## Tech & Tools
 
-### Предварительные требования
-- Node.js (версия 14 или выше)
-- npm или yarn
+- **TypeScript** — strict typing, modern JS  
+- **SCSS (BEM)** — scalable styling architecture  
+- **Webpack** — bundling and module processing  
+- **HTML5** — semantic markup  
+- **EventEmitter** — custom Observer implementation  
+- **MVP Architecture** — clear separation of concerns  
 
-### Установка зависимостей
+---
+
+## Project Structure
+
+- `src/index.ts` — entry point, Presenter layer  
+- `src/pages/index.html` — main HTML template  
+
+### Core Layers
+
+- `src/components/base/` — infrastructure
+  - `api.ts` — API client  
+  - `event-emitter.ts` — event bus  
+
+- `src/components/models/` — data & business logic
+  - `app-state.ts` — global app state (catalog, cart)  
+  - `order.ts` — order model + validation  
+
+- `src/components/views/` — UI layer
+  - `main.ts`, `cart.ts`, `modal.ts`, `product-card.ts`, `success.ts`  
+  - `forms/` — checkout forms  
+
+- `src/types/` — types & interfaces  
+
+- `src/scss/styles.scss` — global styles  
+- `src/common.blocks/` — BEM blocks  
+- `src/utils/` — helpers & constants  
+
+---
+
+## Setup
+
+### Requirements
+- Node.js ≥ 14  
+- npm or yarn  
+
+### Install
 ```bash
 npm install
 ```
-или
-```bash
+or
+```
 yarn
 ```
 
-### Запуск в режиме разработки
+### Run (dev mode)
 ```bash
 npm run start
 ```
-или
+or
 ```bash
 yarn start
 ```
 
-Приложение будет доступно по адресу: `http://localhost:8080`
+App runs at: `http://localhost:8080`
 
-## Принципы разработки
+### Architecture Principles
+- **MVP (Model-View-Presenter)** - strict separation of concerns
+- **Event-Driven Architecture** 
+- **Single Responsibility Principle** - every class has one responsibility
+- **Dependency Inversion** - Dependency inversion via EventEmitter
 
-### Архитектурные принципы
-- **MVP (Model-View-Presenter)** - четкое разделение ответственности
-- **Event-Driven Architecture** - взаимодействие через события
-- **Single Responsibility Principle** - каждый класс имеет одну ответственность
-- **Dependency Inversion** - зависимости инвертированы через EventEmitter
+## Application Logic
 
-## Функциональность приложения
+### Product Catalog
+- Card-based UI
+- Modal preview
+- Add to cart
+- Category-based styling
 
-### Каталог товаров
-- Отображение товаров в виде карточек
-- Просмотр детальной информации о товаре в модальном окне
-- Добавление товаров в корзину
-- Категоризация товаров с визуальным оформлением
+### Cart
+- Add/remove items
+- Auto total calculation
+- Header counter
+- Modal view
 
-### Корзина покупок
-- Добавление/удаление товаров
-- Автоматический подсчет общей стоимости
-- Счетчик товаров в шапке сайта
-- Просмотр содержимого корзины в модальном окне
+### Checkout
+#### 1. Step 1 — Payment & Delivery
+- Payment method selection
+- Address input
+- Real-time validation
+- "Next" enabled only when valid
 
-### Оформление заказа
-Процесс оформления заказа состоит из двух этапов:
+#### 2. Step 2 — Contacts
+- Email + phone input
+- Real-time validation
+- "Pay" enabled only when valid
 
-#### 1. Форма оплаты и доставки
-- Выбор способа оплаты (онлайн/при получении)
-- Ввод адреса доставки
-- Валидация в реальном времени
-- Кнопка "Далее" активируется только при корректном заполнении
+### Form Validation
+- Checking required fields for completion
+- Email and phone number format validation
+- Displaying validation errors
+- Disabling submit buttons for invalid data
+- Clearing forms on reopening
 
-#### 2. Форма контактов
-- Ввод email адреса
-- Ввод номера телефона
-- Валидация в реальном времени
-- Кнопка "Оплатить" активируется только при корректном заполнении
+### Modal Windows
+- Viewing product details
+- Shopping cart
+- Checkout forms
+- Order success message
+- Closing by clicking outside the window, by clicking the cross, or by pressing Esc
 
-### Валидация форм
-- Проверка заполненности обязательных полей
-- Валидация формата email и телефона
-- Отображение ошибок валидации
-- Блокировка кнопок отправки при некорректных данных
-- Очистка форм при повторном открытии
+## Architecture
 
-### Модальные окна
-- Просмотр детальной информации о товаре
-- Корзина покупок
-- Формы оформления заказа
-- Сообщение об успешном заказе
-- Закрытие по клику вне окна, по крестику или клавише Esc
+The application is built on the MVP (Model — View — Presenter) principle:
 
-## Архитектура
+### Model
+- Manages data and business logic
+- Contains form validation
+- Independent of View and Presenter
 
-Приложение построено по принципу MVP (Model — View — Presenter):
-
-### Model (Модель)
-- Управляет данными и бизнес-логикой
-- Содержит валидацию форм
-- Не зависит от View и Presenter
-
-### View (Представление)
-- Отображает данные пользователю
-- Реагирует на действия пользователя
-- Отправляет события через EventEmitter
-- Не содержит бизнес-логику
+### View
+- Displays data to the user
+- Reacts to user actions
+- Sends events via EventEmitter
+- Does not contain business logic
 
 ### Presenter
-- Связывает Model и View через события
-- Координирует взаимодействие между слоями
-- Логика презентера реализована в `index.ts`
+- Connects Model and View via events
+- Coordinates interactions Between layers
+- Presenter logic is implemented in `index.ts`
 
-### Валидация форм
-Валидация реализована в слое Model согласно принципам MVP:
-- View отправляет данные формы в Model через события
-- Model выполняет валидацию и возвращает результат
-- View обновляет UI на основе результатов валидации
-- Валидация происходит в реальном времени при изменении полей
+### Form Validation
+Validation is implemented in the Model layer according to MVP principles:
+- The View sends form data to the Model via events
+- The Model performs validation and returns the result
+- The View updates the UI based on the validation results
+- Validation occurs in real time when fields change
 
-Коммуникация между слоями осуществляется через `EventEmitter`.
-Каждый класс получает экземпляр emitter через конструктор и использует события для взаимодействия с другими слоями.
+Communication between layers is accomplished via `EventEmitter`.
+Each class receives an emitter instance via the constructor and uses events to interact with other layers.
 
 ---
 
-## MVP-поток событий
+## MVP Event Flow
 View → Presenter → Model → Presenter → View
 
-**Подробный пример: клик на карточку товара**
+**Detailed Example: Clicking on a Product Card**
 
 1. **View (ProductCardView):**
-   - Пользователь кликает по карточке товара.
-   - `ProductCardView` генерирует событие `'product:select'` с id товара.
+- The user clicks on the product card.
+- `ProductCardView` generates the `product:select` event with the product ID.
 
 2. **Presenter (index.ts):**
-   - Презентер ловит событие `'product:select'` и вызывает метод `appState.selectProduct(productId)`.
+- The presenter catches the `product:select`` event and calls the `appState.selectProduct(productId)` method.
 
 3. **Model (AppState):**
-   - Метод `selectProduct` ищет товар по id в списке товаров.
-   - Если товар найден, генерируется событие `'product:show_preview'` с объектом товара.
+- The `selectProduct` method searches for a product by id in the product list.
+- If the product is found, the `product:show_preview`` event is generated with the product object.
 
 4. **Presenter (index.ts):**
-   - Презентер ловит событие `'product:show_preview'`.
-   - Создаёт новый экземпляр `ProductCardView` для модального окна (preview).
-   - Передаёт карточку в `ModalView` и вызывает `modalView.open()`.
+- The presenter catches the `product:show_preview`` event.
+- Creates a new `ProductCardView` instance for the modal window (preview).
+- Passes the card to the `ModalView` and calls `modalView.open()`.
 
 5. **View (ModalView):**
-   - Модальное окно отображает карточку товара.
+- The modal window displays the product card.
 
-**Схема:**
+**Scheme:**
 ```
-ProductCardView (клик)
-  → emit('product:select', id)
-    → [Presenter] on('product:select') → appState.selectProduct(id)
-      → [AppState] emit('product:show_preview', product)
-        → [Presenter] on('product:show_preview') → modalView.render(card) + modalView.open()
-          → [ModalView] показывает карточку
+ProductCardView (click)
+→ emit('product:select', id)
+→ [Presenter] on('product:select') → appState.selectProduct(id)
+→ [AppState] emit('product:show_preview', product)
+→ [Presenter] on('product:show_preview') → modalView.render(card) + modalView.open()
+→ [ModalView] shows the card
 ```
 
 ---
 
-## Общая концепция
+## General Concept
 
-`EventEmitter` реализует шаблон наблюдатель (Observer):
-View и Model взаимодействуют через события, не зная о друг друге напрямую.
-Все View и Model получают `EventEmitter` через конструктор.
-
----
-
-## Точка входа, реализация презентера (src/index.ts)
-Этот файл отвечает за инициализацию приложения и реализацию слоя Presenter в архитектуре MVP.
-
-**Основные задачи:**
-- Создаёт экземпляры всех моделей и представлений
-- Связывает их через `EventEmitter`
-- Подписывается на события и управляет взаимодействием между слоями
+`EventEmitter` implements the Observer pattern:
+View and Model interact through events without knowing about each other directly.
+All Views and Models receive an `EventEmitter` through the constructor.
 
 ---
 
-## Описание файла событий (types/event.ts)
+## Entry Point, Presenter Implementation (src/index.ts)
+This file is responsible for initializing the application and implementing the Presenter layer in the MVP architecture.
 
-Файл `src/types/event.ts` содержит строго типизированную карту всех событий приложения. Это центральное место для определения событийной архитектуры, обеспечивающее типобезопасность при работе с EventEmitter.
+**Main Tasks:**
+- Creates instances of all models and views
+- Connects them via `EventEmitter`
+- Subscribes to events and manages interactions between layers
 
-### Структура файла
+---
 
-**Основной интерфейс:**
+## Event File Description (types/event.ts)
+
+The `src/types/event.ts` file contains a strongly typed map of all application events. This is the central location for defining the event architecture, ensuring type safety when working with the EventEmitter.
+
+### File Structure
+
+**Main Interface:**
 ```typescript
 export interface IEvent {
-  '*': undefined;
+'*': undefined;
 
-  // События продуктов
-  'products:loaded': undefined;
-  'products:loading_error': Error;
-  'product:add_to_cart': string;
-  'product:remove_from_cart': string;
-  'product:select': string;
-  'product:show_preview': IProduct;
+// Product Events
+'products:loaded': undefined;
+'products:loading_error': Error;
+'product:add_to_cart': string; 
+'product:remove_from_cart': string; 
+'product:select': string; 
+'product:show_preview': IProduct; 
 
-  // События корзины
-  'cart:open_modal': undefined;
-  'cart:render_counter': number;
-  'cart:render_items': IProduct[];
+// Cart events 
+'cart:open_modal': undefined; 
+'cart:render_counter': number; 
+'cart:render_items': IProduct[]; 
 
-  // События заказа
-  'order:open_contacts_form': undefined;
-  'order:open_payment_form': undefined;
-  'order:set_address': { value: string };
-  'order:set_contacts': { email: string; phone: string };
-  'order:set_payment_method': { method: 'online' | 'cash' };
-  'order:submit_request': IOrder;
-  'order:validate_payment_form': PaymentFormData;
-  'order:validate_contacts_form': ContactsFormData;
-  'order:payment_validation_result': ValidationResult;
-  'order:contacts_validation_result': ValidationResult;
+// Order events 
+'order:open_contacts_form': undefined; 
+'order:open_payment_form': undefined; 
+'order:set_address': { value: string }; 
+'order:set_contacts': { email: string; phone: string }; 
+'order:set_payment_method': { method: 'online' | 'cash' }; 
+'order:submit_request': IOrder; 
+'order:validate_payment_form': PaymentFormData; 
+'order:validate_contacts_form': ContactsFormData; 
+'order:payment_validation_result': ValidationResult; 
+'order:contacts_validation_result': ValidationResult; 
 
-  // События модальных окон
-  'modal:close': undefined;
+// Events of modal windows 
+'modal:close': undefined;
 }
 ```
 
-### Принципы работы
+### Operating Principles
 
-- **Строгая типизация** - каждое событие имеет определенный тип payload
-- **Централизованное управление** - все события определены в одном месте
-- **Автодополнение** - IDE предоставляет подсказки при работе с событиями
-- **Ошибки на этапе компиляции** - неправильное использование событий выявляется TypeScript
+- **Strong Typing** - Each event has a specific payload type
+- **Centralized Management** - All events are defined in one place
+- **Auto-Completion** - The IDE provides hints when working with events
+- **Compile-Time Errors** - Incorrect event usage is detected by TypeScript
 
-### Использование в EventEmitter
+### Usage in EventEmitter
 
 ```typescript
-// Подписка на событие с типизацией
+// Subscribing to a typed event
 emitter.on('product:add_to_cart', (productId: string) => {
-  // productId автоматически типизирован как string
+// productId is automatically typed as string
 });
 
-// Эмиссия события с проверкой типов
+// Emitting an event
+// Emit an event with type checking
 emitter.emit('order:set_contacts', {
-  email: 'user@example.com',
-  phone: '+7 999 123-45-67'
+email: 'user@example.com',
+phone: '+7 999 123-45-67'
 });
 ```
 ---
 
-## Наблюдатель / Observer (src/components/base/event_emitter.ts)
-Файл реализует собственный, облегчённый вариант паттерна Observer (Наблюдатель), который позволяет компонентам подписываться на события и реагировать на них.
-Это фундаментальный механизм связи между всеми частями приложения. Благодаря `EventEmitter`, View не знает, что существует Model, и наоборот — они просто обмениваются событиями.
+## Observer (src/components/base/event_emitter.ts)
+This file implements its own, lightweight version of the Observer pattern, which allows components to subscribe to and respond to events.
+This is the fundamental communication mechanism between all parts of the application. Thanks to the EventEmitter, the View doesn't know that the Model exists, and vice versa—they simply exchange events.
 
-**Основная роль:**
-- Хранит подписки на события
-- Позволяет подписываться через `.on(...)`
-- Позволяет "триггерить" события через `.emit(...)`
-- Обеспечивает слабую связанность между компонентами
+**Primary Role:**
+- Stores event subscriptions
+- Allows subscriptions via `.on(...)`
+- Allows events to be triggered via `.emit(...)`
+- Ensures loose coupling between components
 
-**Пример использования:**
+**Usage Example:**
 ```ts
 emitter.on('cart:add', (product) => cartModel.addProduct(product));
 emitter.emit('cart:render', cartModel.getItems());
 ```
 ---
 
-## Слой моделей
+## Model Layer
 
 ### AppStateModel
-Центральная модель состояния приложения, управляющая каталогом товаров, корзиной и модальными окнами.
-Расположение: `src/components/models/app-state.ts`
+The central state model of the application, managing the product catalog, cart, and modal windows. Location: `src/components/models/app-state.ts`
 
-**Конструктор:**
+**Constructor:**
 ```typescript
 constructor(emitter: EventEmitter)
 ```
 
-**Основные поля:**
-- `private _products: IProduct[]` — каталог товаров
-- `private _cartItems: IProduct[]` — товары в корзине
-- `private _selectedProductId: string | null` — ID выбранного товара
-- `private _modalState: 'cart' | 'product_preview' | 'payment' | 'contacts' | 'success' | null` — состояние модального окна
-- `private api: Api` — клиент для работы с API
-- `private emitter: EventEmitter` — брокер событий
+**Main fields:**
+- `private _products: IProduct[]` — product catalog
+- `private _cartItems: IProduct[]` — items in the cart
+- `private _selectedProductId: string | null` — ID of the selected product
+- `private _modalState: 'cart' | 'product_preview' | 'payment' | 'contacts' | 'success' | null` — modal window state
+- `private api: Api` — client for working with the API
+- `private emitter: EventEmitter` — event broker
 
-**Основные методы:**
+**Main methods:**
 
-**Управление каталогом:**
-- `loadProducts(): Promise<void>` — загружает товары с сервера
-- `get products(): IProduct[]` — возвращает каталог товаров
-- `set products(value: IProduct[])` — устанавливает каталог и эмитит событие загрузки
+**Catalog management:**
+- `loadProducts(): Promise<void>` — loads products from the server
+- `get products(): IProduct[]` — returns the product catalog
+- `set products(value: IProduct[])` — sets the catalog and emits a load event
 
-**Управление корзиной:**
-- `addProductToCart(productId: string): void` — добавляет товар в корзину (проверяет дубликаты)
-- `removeProductFromCart(productId: string): void` — удаляет товар из корзины
-- `get cartItems(): IProduct[]` — возвращает товары в корзине
-- `set cartItems(value: IProduct[])` — устанавливает товары в корзине
-- `getCartItemsCount(): number` — возвращает количество товаров в корзине
-- `clearCart(): void` — очищает корзину и обновляет счетчик
-- `isProductInCart(productId: string): boolean` — проверяет наличие товара в корзине
+**Cart management:**
+- `addProductToCart(productId: string): void` — adds a product to the cart (checks for duplicates)
+- `removeProductFromCart(productId: string): void` — removes a product from the cart
+- `get cartItems(): IProduct[]` — returns the products in the cart
+- `set cartItems(value: IProduct[])` — sets the products in the cart
+- `getCartItemsCount(): number` — returns Number of items in the cart
+- `clearCart(): void` — Clears the cart and updates the counter
+- `isProductInCart(productId: string): boolean` — Checks if a product is in the cart
 
-**Управление выбором товара:**
-- `set selectedProductId(value: string)` — устанавливает выбранный товар и эмитит событие показа превью
-- `get selectedProductId(): string | null` — возвращает ID выбранного товара
+**Product Selection Management:**
+- `set selectedProductId(value: string)` — Sets the selected product and emits a preview event
+- `get selectedProductId(): string | null` — returns the ID of the selected product
 
-**Управление модальными окнами:**
-- `set modalState(value)` — устанавливает состояние модального окна
-- `get modalState()` — возвращает текущее состояние модального окна
-- `isShowingCart(): boolean` — проверяет, открыта ли корзина
-- `isShowingProductPreview(): boolean` — проверяет, открыто ли превью товара
+**Modal Window Management:**
+- `set modalState(value)` — sets the modal window state
+- `get modalState()` — returns the current state of the modal window
+- `isShowingCart(): boolean` — checks if the cart is open
+- `isShowingProductPreview(): boolean` — checks if the product preview is open
 
-**Эмитируемые события:**
-- `'products:loaded'` — каталог товаров загружен
-- `'products:loading_error'` — ошибка загрузки каталога
-- `'product:show_preview'` — показать превью товара
-- `'cart:render_counter'` — обновить счетчик товаров в корзине
+**Emitted Events:**
+- `products:loaded` — product catalog loaded
+- `products:loading_error` — catalog loading error
+- `product:show_preview` — show product preview
+- `cart:render_counter` — update the product counter in the cart
 
 ---
 
 ### OrderModel
-Модель заказа с валидацией форм и управлением данными заказа.
-Расположение: `src/components/models/order.ts`
+Order model with form validation and order data management.
+Location: `src/components/models/order.ts`
 
-**Конструктор:**
-```typescript
+**Constructor:**
+```TypeScript
 constructor(emitter: EventEmitter)
 ```
 
-**Основные поля:**
-- `private order: Partial<IOrder>` — объект текущего заказа
-- `private emitter: EventEmitter` — брокер событий
+**Main Fields:**
+- `private order: Partial<IOrder>` — the current order object
+- `private emitter: EventEmitter` — the event broker
 
-**Основные методы:**
+**Main Methods:**
 
-**Управление данными заказа:**
-- `setPaymentMethod(method: 'online' | 'cash'): void` — устанавливает способ оплаты
-- `setAddress(address: string): void` — устанавливает адрес доставки
-- `setContacts(email: string, phone: string): void` — устанавливает контактные данные
-- `setItems(items: IProduct[]): void` — устанавливает товары и рассчитывает общую сумму
+**Order Data Management:**
+- `setPaymentMethod(method: 'online' | 'cash'): void` — sets the payment method
+- `setAddress(address: string): void` — sets the shipping address
+- `setContacts(email: string, phone: string): void` — sets contact information
+- `setItems(items: IProduct[]): void` — sets the products and calculates the total
 
-**Валидация форм:**
-- `validatePaymentForm(data: PaymentFormData): ValidationResult` — валидация формы оплаты
-- `validateContactsForm(data: ContactsFormData): ValidationResult` — валидация формы контактов
-- `private isValidEmail(email: string): boolean` — проверка формата email
-- `private isValidPhone(phone: string): boolean` — проверка формата телефона
+**Form Validation:**
+- `validatePaymentForm(data: PaymentFormData): ValidationResult` — validate the payment form
+- `validateContactsForm(data: ContactsFormData): ValidationResult` — contact form validation
+- `private isValidEmail(email: string): boolean` — email format check
+- `private isValidPhone(phone: string): boolean` — phone format check
 
-**Управление состоянием:**
-- `getOrder(): IOrder` — возвращает полный заказ (выбрасывает ошибку при неполных данных)
-- `clear(): void` — полностью очищает заказ
-- `clearFormData(): void` — очищает только данные форм, оставляя товары и сумму
+**State Management:**
+- `getOrder(): IOrder` — returns the full order (throws an error if the data is incomplete)
+- `clear(): void` — clears the order completely
+- `clearFormData(): void` — clears only the form data, leaving the products and total
 
-**Логика валидации:**
-- **Форма оплаты**: проверка выбора способа оплаты и заполненности адреса
-- **Форма контактов**: проверка заполненности email и телефона
-- **Результат валидации**: содержит статус валидности, список ошибок и состояние кнопки отправки
+**Validation Logic:**
+- **Payment Form**: checks the payment method selection and the address is complete
+- **Contact Form**: checks the email and phone number are complete
+- **Validation Result**: contains the validity status, a list of errors, and the state of the submit button
 
 ---
 
-## Слой View
+## View Layer
 
-Все представления (View) получают в конструкторе `EventEmitter`, генерируют события, но не хранят состояние и не обращаются к данным напрямую.
+All views are instantiated in the constructor EventEmitters generate events but don't store state or access data directly.
 
 ### MainView
-Главная страница с галереей товаров.
-Расположение: src/components/views/main.ts
+Main page with a product gallery.
+Location: src/components/views/main.ts
 
-**Конструктор:**
+**Constructor:**
 ```ts
 constructor(private emitter: EventEmitter)
 ```
 
-**Методы:**
-- `render(cards: HTMLElement[]): void` — рендер карточек товаров
-- `updateCounter(count: number): void` — обновление счётчика корзины
+**Methods:**
+- `render(cards: HTMLElement[]): void` — render product cards
+- `updateCounter(count: number): void` — update cart counter
 
-**Эмитируемые события:**
-- `'cart:open_modal'` — при клике на иконку корзины
+**Emitted Events:**
+- `'cart:open_modal'` — when the cart icon is clicked
 
 ---
 
 ## ProductCardView
 
-### Конструктор
+### Constructor
 
 ```ts
 constructor(template: HTMLTemplateElement, emitter: EventEmitter, action?: (event: MouseEvent) => void)
 ```
-- **template** — HTML-шаблон карточки.
-- **emitter** — экземпляр EventEmitter для взаимодействия с presenter.
-- **action** — необязательный обработчик клика по кнопке ("В корзину", "Удалить из корзины" и т.д.), передаётся из presenter (index.ts), где доступно состояние корзины.
+- **template** — HTML template for the card.
+- **emitter** — EventEmitter instance for interacting with the presenter. - **action** — optional button click handler ("Add to Cart," "Remove from Cart," etc.), passed from the presenter (index.ts), where the cart state is available.
 
-### Методы
+### Methods
 
 - `render(product: IProduct, cardType: 'catalog' | 'preview' | 'cart' = 'catalog', buttonState?: 'remove' | 'buy' | 'buy_disabled', index?: number): HTMLElement`
-  Рендерит карточку товара в нужном виде (каталог, превью, корзина) и с нужным состоянием кнопки.
+Renders the product card in the desired format (catalog, preview, cart) and with the desired button state.
 
 - `formatPrice(value: number | null): string`
-  Форматирует цену для отображения.
+Formats the price for display.
 
 - `canBeAddedToCart(product: IProduct): boolean`
-  Возвращает true, если товар можно добавить в корзину.
+Returns true if the product can be added to the cart.
 
-### Эмитируемые события
+### Emitted Events
 
-- `'product:select'` — клик по карточке (открыть превью)
-- `'product:add_to_cart'` — добавить товар в корзину (вызывается через обработчик action)
-- `'product:remove_from_cart'` — удалить товар из корзины (клик по кнопке удаления в корзине)
+- `'product:select'` — click on the card (open preview)
+- `'product:add_to_cart'` — add a product to the cart (called via the action handler)
+- `'product:remove_from_cart'` — remove a product from the cart (click on the delete button in the cart)
 
-### Особенности
+### Features
 
-- Не хранит состояние "в корзине" — этот признак определяется только в модели.
-- Для карточки-превью и других вариантов обработчик кнопки передаётся через параметр конструктора (`action`).
-- Для разных шаблонов карточки (каталог, превью, корзина) используются разные методы рендера, а состояние кнопки передаётся через параметр `buttonState` метода render.
-- Класс не содержит бизнес-логики, только работу с DOM и событиями.
+- Does not store the "in cart" state — this attribute is defined only in the model.
+- For preview cards and other variants, the button handler is passed via the constructor parameter (`action`).
+- Different card templates (catalog, preview, cart) use different rendering methods, and the button state is passed via the `buttonState` parameter of the render method.
+- The class does not contain business logic, only DOM and event handling.
 
 ---
 
 ### CartView
-Отображает корзину. Получает готовые DOM-элементы карточек.
-Расположение: src/components/views/cart.ts
+Displays the cart. Gets the predefined DOM elements of the cards.
+Location: src/components/views/cart.ts
 
-**Конструктор:**
+**Constructor:**
 ```ts
 constructor(private container: HTMLElement, private emitter: EventEmitter)
 ```
 
-**Методы:**
-- `render(data: ICartItem[]): HTMLElement` — рендер корзины
-- `clear(): void` — очищает содержимое
-- `updateTotalPrice(total: number): void` — отображает общую стоимость товаров (не рассчитывает, только показывает переданное значение)
+**Methods:**
+- `render(data: ICartItem[]): HTMLElement` — renders the cart
+- `clear(): void` — clears the contents
+- `updateTotalPrice(total: number): void` — displays the total price of the items (does not calculate, only displays the passed value)
 
-**Эмитируемые события:**
-- `'product:remove_from_cart'` — клик по кнопке удаления товара
-- `'order:open_payment_form'` — клик по кнопке "Оформить заказ"
+**Emitted Events:**
+- `'product:remove_from_cart'` — click on the remove item button
+- `'order:open_payment_form'` — click on the "Checkout" button
 
 ---
 
 ### ModalView
-Универсальный контейнер для отображения модальных окон.
-Расположение: src/components/views/modal.ts
+A universal container for displaying modal windows.
+Location: src/components/views/modal.ts
 
-**Конструктор:**
+**Constructor:**
 ```ts
 constructor(private container: HTMLElement, private emitter: EventEmitter)
 ```
 
-**Методы:**
-- `render(content: HTMLElement): void` — вставляет контент
-- `open(): void` — показывает окно
-- `close(): void` — скрывает окно
-- `isOpen(): boolean` — проверяет, открыто ли окно
+**Methods:**
+- `render(content: HTMLElement): void` — inserts content
+- `open(): void` — shows the window
+- `close(): void` — hides the window
+- `isOpen(): boolean` — checks if the window is open
 
-**Эмитируемые события:**
-- `'modal:close'` — клик по фону, крестику или Esc
+**Emitted Events:**
+- `'modal:close'` — click on the background, cross, or Esc
 
 ---
 
 ### OrderPaymentView
-Форма: способ оплаты и адрес.
-Расположение: src/components/views/forms/order-payment.ts
+Form: payment method and address.
+Location: src/components/views/forms/order-payment.ts
 
-**Конструктор:**
+**Constructor:**
 ```ts
 constructor(template: HTMLTemplateElement, emitter: EventEmitter)
 ```
 
-**Методы:**
-- `render(): HTMLElement` - возвращает инициализированный элемент формы
-- `updateValidationResult(result: ValidationResult): void` - обновляет UI на основе результатов валидации
-- `bindEvents(): void` - события привязаны в конструкторе
+**Methods:**
+- `render(): HTMLElement` - returns the initialized form element
+- `updateValidationResult(result: ValidationResult): void` - updates the UI based on the validation results
+- `bindEvents(): void` - events are bound in the constructor
 
-**Эмитируемые события:**
-- `'order:set_payment_method'` - выбор способа оплаты
-- `'order:set_address'` - ввод адреса
-- `'order:validate_payment_form'` - валидация формы оплаты
-- `'order:open_contacts_form'` - переход к форме контактов
+**Emitted Events:**
+- `'order:set_payment_method'` - select a payment method
+- `'order:set_address'` - enter an address
+- `'order:validate_payment_form'` - validate the payment form
+- `'order:open_contacts_form'` - navigate to the contact form
 
-**Особенности:**
-- Инициализация DOM элементов в конструкторе
-- Валидация в реальном времени при изменении полей
-- Автоматическая очистка формы при повторном открытии
+**Features:**
+- Initialize DOM elements in the constructor
+- Real-time validation when fields change
+- Automatic form clearing when reopened
 
 ---
 
 ### OrderContactsView
-Форма: email и телефон.
-Расположение: `src/components/views/forms/order-contacts.ts`
+Form: email and phone number.
+Location: `src/components/views/forms/order-contacts.ts`
 
-**Конструктор:**
-```typescript
+**Constructor:**
+```TypeScript
 constructor(template: HTMLTemplateElement, emitter: EventEmitter)
 ```
 
-**Методы:**
-- `render(): HTMLElement` - возвращает инициализированный элемент формы
-- `updateValidationResult(result: ValidationResult): void` - обновляет UI на основе результатов валидации
-- `bindEvents(): void` - события привязаны в конструкторе
+**Methods:**
+- `render(): HTMLElement` - returns the initialized form element
+- `updateValidationResult(result: ValidationResult): void` - updates the UI based on the validation results
+- `bindEvents(): void` - events are bound in the constructor
 
-**Эмитируемые события:**
-- `'order:set_contacts'` - ввод email и телефона
-- `'order:validate_contacts_form'` - валидация формы контактов
+**Emitted Events:**
+- `'order:set_contacts'` - email and phone number input
+- `'order:validate_contacts_form'` - contact form validation
 
-**Особенности:**
-- Инициализация DOM элементов в конструкторе
-- Валидация в реальном времени при изменении полей
-- Автоматическая очистка формы при повторном открытии
+**Features:**
+- DOM element initialization in the constructor
+- Real-time validation when fields change
+- Automatic form clearing on resubmission opening
 
 ---
 
 ### SuccessView
-Показывает финальное сообщение после успешного оформления заказа.
-Расположение: `src/components/views/success.ts`
+Displays the final message after a successful order.
+Location: `src/components/views/success.ts`
 
-**Методы:**
-- `render(): HTMLElement` - создаёт и возвращает DOM-элемент с сообщением об успешном оформлении заказа
+**Methods:**
+- `render(): HTMLElement` - creates and returns a DOM element with a message about a successful order
 
 ---
 
-## Слой презентера
-Всё взаимодействие между Model и View реализовано в `index.ts`.
-- Подписка на события через `emitter.on(...)`
-- Создание всех экземпляров классов
-- Загрузка данных с API и передача в модель
-- Обработка событий пользователя
+## Presenter Layer
+All interaction between the Model and View is implemented in `index.ts`.
+- Subscribing to events via `emitter.on(...)`
+- Creating all class instances
+- Loading data from the API and passing it to the model
+- Handling user events
 
-## События
+## Events
 
-| Событие                      | Источник                | Обработчик             | Назначение
-|------------------------------|-------------------------|------------------------|-----------
-| `product:add_to_cart`        | ProductCardView         | AppState               | Добавить товар в корзину
-| `product:remove_from_cart`   | ProductCardView/CartView| AppState               | Удалить товар из корзины
-| `product:select`             | ProductCardView         | AppState               | Выбрать товар
-| `product:show_preview`       | AppState                | ModalView              | Показать превью товара
-| `cart:open_modal`            | MainView                | CartView               | Открыть корзину
-| `cart:render_counter`        | AppState                | MainView               | Обновить счетчик корзины
-| `cart:render_items`          | (зарезервировано)       | CartView               | Рендер корзины (не используется)
-| `order:open_payment_form`    | CartView                | ModalView              | Открыть форму оплаты
-| `order:open_contacts_form`   | OrderPaymentView        | ModalView              | Открыть форму контактов
-| `order:set_payment_method`   | OrderPaymentView        | OrderModel             | Установить способ оплаты
-| `order:set_address`          | OrderPaymentView        | OrderModel             | Установить адрес
-| `order:set_contacts`         | OrderContactsView       | OrderModel             | Установить email и телефон
-| `order:validate_payment_form`| OrderPaymentView        | OrderModel             | Валидация формы оплаты
-| `order:validate_contacts_form`| OrderContactsView       | OrderModel             | Валидация формы контактов
-| `order:payment_validation_result` | OrderModel         | OrderPaymentView       | Результат валидации формы оплаты
-| `order:contacts_validation_result` | OrderModel       | OrderContactsView      | Результат валидации формы контактов
-| `order:submit_request`       | OrderContactsView       | index.ts, API          | Отправить заказ
-| `catalog:loaded`             | AppState                | MainView               | Каталог загружен
-| `catalog:error`              | AppState                | MainView               | Ошибка загрузки каталога
-| `modal:close`                | ModalView               | -                      | Закрыть модальное окно
+| Event | Source | Handler | Destination
+|------------------------------|--------------------------|-----------
+| `product:add_to_cart` | ProductCardView | AppState | Add product to cart
+| `product:remove_from_cart` | ProductCardView/CartView| AppState | Remove product from cart
+| `product:select` | ProductCardView | AppState | Select product
+| `product:show_preview` | AppState | ModalView | Show product preview
+| `cart:open_modal` | MainView | CartView | Open cart
+| `cart:render_counter` | AppState | MainView | Update cart counter
+| `cart:render_items` | (reserved) | CartView | Render cart (not used)
+| `order:open_payment_form` | CartView | ModalView | Open payment form
+| `order:open_contacts_form` | OrderPaymentView | ModalView | Open contact form
+| `order:set_payment_method` | OrderPaymentView | OrderModel | Set payment method
+| `order:set_address` | OrderPaymentView | OrderModel | Set address
+| `order:set_contacts` | OrderContactsView | OrderModel | Set email and phone
+| `order:validate_payment_form`| OrderPaymentView | OrderModel | Payment form validation
+| `order:validate_contacts_form`| OrderContactsView | OrderModel | Contact form validation
+| `order:payment_validation_result` | OrderModel | OrderPaymentView | Payment form validation result
+| `order:contacts_validation_result` | OrderModel | OrderContactsView | Contact form validation result
+| `order:submit_request` | OrderContactsView | index.ts, API | Submit order
+| `catalog:loaded` | AppState | MainView | Catalog loaded
+| `catalog:error` | AppState | MainView | Error loading catalog
+| `modal:close` | ModalView | - | Close the modal window
 
-## Типы данных (src/types)
-
-- `IProduct` — товар
+## Data Types (src/types)
+- `IProduct` — product
 ```typescript
 interface IProduct {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  image: string;
-  price: number;
+id: string;
+title: string;
+description: string;
+category: string;
+image: string;
+price: number;
 }
 ```
 
-- `IOrder` — финальная структура заказа
+- `IOrder` — final order structure
 ```typescript
 interface IOrder {
-  payment: 'online' | 'cash';
-  address: string;
-  email: string;
-  phone: string;
-  total: number;
-  items: string[]; // массив ID товаров
+payment: 'online' | 'cash';
+address: string;
+email: string;
+phone: string;
+total: number;
+items: string[]; // array of product IDs
 }
 ```
 
-- `PaymentFormData` — данные формы оплаты для валидации
+- `PaymentFormData` — payment form data for validation
 ```typescript
 interface PaymentFormData {
-  paymentMethod: 'online' | 'cash' | null;
-  address: string;
+paymentMethod: 'online' | 'cash' | null;
+address: string;
 }
 ```
 
-- `ContactsFormData` — данные формы контактов для валидации
-```typescript
+- `ContactsFormData` — contact form data for validation
+```TypeScript
 interface ContactsFormData {
-  email: string;
-  phone: string;
+email: string;
+phone: string;
 }
 ```
 
-- `ValidationResult` — результат валидации формы
-```typescript
+- `ValidationResult` — form validation result
+```TypeScript
 interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-  submitButtonDisabled: boolean;
+isValid: boolean;
+errors: string[];
+submitButtonDisabled: boolean;
 }
 ```
 
-- `IEvent` — карта всех событий приложения и их типов payload
-```typescript
+- `IEvent` — map of all application events and their payload types
+```TypeScript
 export interface IEvent {
-  // ...см. актуальный список событий выше...
+// ...see the current list of events above...
 }
 ```
 
 ---
 
 ## EventEmitter
-Реализация паттерна Observer для событийной архитектуры.
+Implementation of the Observer pattern for an event-driven architecture.
 
-**Основные методы:**
-- `on(eventName, handler)` — подписка на событие (можно несколько обработчиков на одно событие)
-- `off(eventName, handler)` — удалить обработчик события
-- `emit(eventName, data?)` — инициировать событие с данными
-- `onAll(handler)` — подписка на все события (универсальный обработчик)
-- `offAll()` — удалить все обработчики
-- `trigger(eventName)` — получить функцию-триггер для генерации события
+**Main methods:**
+- `on(eventName, handler)` — subscribe to an event (multiple handlers per event are possible)
+- `off(eventName, handler)` — remove an event handler
+- `emit(eventName, data?)` — trigger an event with data
+- `onAll(handler)` — subscribe to all events (generic handler)
+- `offAll()` — remove all handlers
+- `trigger(eventName)` — get a trigger function for emitting an event
 
-Все события строго типизированы через `IEvent`.
+All events are strongly typed via `IEvent`.
 
 ---
 
 ## API
 
-Класс для работы с сервером (REST API).
+Class for working with the server (REST API).
 
-**Основные методы:**
-- `get<T>(uri: string): Promise<T>` — GET-запрос, возвращает данные типа T
-- `post(uri: string, data: object, method?: 'POST' | 'PUT' | 'DELETE')` — POST/PUT/DELETE-запрос с передачей данных
+**Main methods:**
+- `get<T>(uri: string): Promise<T>` — GET request, returns data of type T
+- `post(uri: string, data: object, method?: 'POST' | 'PUT' | 'DELETE')` — POST/PUT/DELETE request with data transfer
 
-**Особенности:**
-- Базовый URL задаётся в конструкторе
-- Все запросы используют JSON
-- Ошибки сервера обрабатываются и пробрасываются как исключения
-- Типы ответов строго типизированы через дженерики
+**Features:**
+- The base URL is specified in the constructor
+- All requests use JSON
+- Server errors are handled and rethrown as exceptions
+- Response types are strongly typed via generics
